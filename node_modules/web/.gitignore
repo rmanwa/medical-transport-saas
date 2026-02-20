@@ -1,0 +1,43 @@
+# dependencies
+node_modules
+**/node_modules
+
+# builds
+dist
+build
+**/dist
+**/build
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# prisma generated / local DB
+prisma/dev.db
+prisma/*.db
+prisma/*.db-journal
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# Vite
+apps/web/.vite
+apps/web/node_modules/.vite
+
+# Nest
+apps/api/dist
+apps/api/.nest
+
+# coverage
+coverage

@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  STAFF
+}
+
+enum Priority {
+  NORMAL
+  URGENT
+}
+
+enum MeetingType {
+  PHYSICAL
+  VIRTUAL
+}
+
+model Company {
+  id        String     @id @default(uuid())
+  name      String
+  branches  Branch[]
+  users     User[]
+  hospitals Hospital[]
+}
+
+model Branch {
+  id           String   @id @default(uuid())
+  name         String
+  address      String
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id])
+  users        UserBranch[]
+  patients     Patient[]
+  shifts       Shift[]
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  passwordHash         String
+  name                 String
+  role                 Role      @default(STAFF)
+  companyId            String
+  company              Company   @relation(fields: [companyId], references: [id])
+  branches             UserBranch[]
+  canAccessAllBranches Boolean   @default(false)
+}
+
+model UserBranch {
+  userId   String
+  branchId String
+  user     User   @relation(fields: [userId], references: [id])
+  branch   Branch @relation(fields: [branchId], references: [id])
+  @@id([userId, branchId])
+}
+
+model Patient {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  gender      String
+  dateOfBirth DateTime
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  shifts      Shift[]
+}
+
+model Hospital {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  shifts    Shift[]
+}
+
+model Shift {
+  id          String      @id @default(uuid())
+  startTime   DateTime
+  endTime     DateTime
+  notes       String?     @db.Text
+  type        MeetingType @default(PHYSICAL)
+  priority    Priority    @default(NORMAL)
+  patientId   String
+  patient     Patient     @relation(fields: [patientId], references: [id])
+  branchId    String
+  branch      Branch      @relation(fields: [branchId], references: [id])
+  hospitalId  String?
+  hospital    Hospital?   @relation(fields: [hospitalId], references: [id])
+}

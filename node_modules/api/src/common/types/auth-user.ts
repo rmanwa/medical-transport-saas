@@ -1,0 +1,11 @@
+import { Role } from '@prisma/client';
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: Role;
+  companyId: string;
+  canAccessAllBranches: boolean;
+  branchIds: string[]; // explicit memberships from UserBranch
+};

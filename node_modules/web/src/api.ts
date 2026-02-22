@@ -139,3 +139,42 @@ export async function getScheduleRange(params: { from: string; to: string; branc
   if (params.branchId) qs.set('branchId', params.branchId);
   return apiGet<ShiftRow[]>(`/dashboard/schedule/range?${qs.toString()}`);
 }
+
+// Hospitals
+export async function getHospitals(): Promise<Hospital[]> {
+  return apiGet<Hospital[]>('/hospitals');
+}
+
+export async function createHospital(body: { name: string; address: string }): Promise<Hospital> {
+  return apiPost<Hospital>('/hospitals', body);
+}
+
+export async function updateHospital(id: string, body: { name?: string; address?: string }): Promise<Hospital> {
+  const res = await apiFetch(`/hospitals/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return (await res.json()) as Hospital;
+}
+
+export async function deleteHospital(id: string): Promise<{ ok: true }> {
+  const res = await apiFetch(`/hospitals/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  return (await res.json()) as { ok: true };
+}
+
+// Shifts
+export async function createShift(
+  branchId: string,
+  body: {
+    startTime: string;
+    endTime: string;
+    notes?: string;
+    type?: MeetingType;
+    priority?: Priority;
+    patientId: string;
+    hospitalId?: string | null;
+  },
+) {
+  return apiPost<ShiftRow>(`/branches/${encodeURIComponent(branchId)}/shifts`, body);
+}

@@ -37,7 +37,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
             name: user.name,
             role: user.role,
             companyId: user.companyId,
-            canAccessAllBranches: user.role === 'SUPER_ADMIN',
+            canAccessAllBranches: user.canAccessAllBranches || user.role === 'SUPER_ADMIN',
             branchIds,
         };
     }

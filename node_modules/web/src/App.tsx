@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { clearToken, getMe } from './api';
 import type { AuthUser } from './api';
+
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PatientsPage } from './pages/PatientsPage';
+import ShiftsPage from './pages/Shifts';
+import { HospitalsPage } from './pages/HospitalsPage';
 
-type Route = 'dashboard' | 'patients';
+type Route = 'dashboard' | 'patients' | 'shifts' | 'hospitals';
 
 export default function App() {
   const [me, setMe] = useState<AuthUser | null>(null);
@@ -18,7 +21,6 @@ export default function App() {
       const res = await getMe();
       setMe(res.user);
     } catch (e: any) {
-      // token missing/invalid -> go to login
       setMe(null);
       setBootError(e?.message ?? String(e));
     }
@@ -58,6 +60,12 @@ export default function App() {
         <button onClick={() => setRoute('patients')} disabled={route === 'patients'}>
           Patients
         </button>
+        <button onClick={() => setRoute('shifts')} disabled={route === 'shifts'}>
+          Shifts
+        </button>
+        <button onClick={() => setRoute('hospitals')} disabled={route === 'hospitals'}>
+          Hospitals
+        </button>
 
         <div style={{ marginLeft: 'auto', fontSize: 13, opacity: 0.85 }}>
           {me.name} ({me.role})
@@ -68,6 +76,8 @@ export default function App() {
 
       {route === 'dashboard' && <DashboardPage />}
       {route === 'patients' && <PatientsPage />}
+      {route === 'shifts' && <ShiftsPage />}
+      {route === 'hospitals' && <HospitalsPage me={me}/>}
     </div>
   );
 }

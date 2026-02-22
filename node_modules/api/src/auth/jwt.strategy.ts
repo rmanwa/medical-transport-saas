@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       name: user.name,
       role: user.role,
       companyId: user.companyId,
-      canAccessAllBranches: user.role === 'SUPER_ADMIN',
+      canAccessAllBranches: user.canAccessAllBranches || user.role === 'SUPER_ADMIN',
       branchIds,
     };
   }

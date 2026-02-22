@@ -21,10 +21,15 @@ let AuthController = class AuthController {
         this.auth = auth;
     }
     async login(body) {
-        const token = await this.auth.login(body.email, body.password);
-        if (!token)
+        const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+        const password = typeof body.password === 'string' ? body.password : '';
+        if (!email || !email.includes('@') || !password) {
+            throw new common_1.BadRequestException('email and password are required');
+        }
+        const result = await this.auth.login(email, password);
+        if (!result)
             throw new common_1.UnauthorizedException('Invalid credentials');
-        return token;
+        return result;
     }
 };
 exports.AuthController = AuthController;

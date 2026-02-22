@@ -43,9 +43,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
+const bcrypt = __importStar(require("bcryptjs"));
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
-const bcrypt = __importStar(require("bcrypt"));
 const prisma_service_1 = require("../prisma/prisma.service");
 let AuthService = class AuthService {
     prisma;
@@ -55,22 +55,25 @@ let AuthService = class AuthService {
         this.jwt = jwt;
     }
     async login(email, password) {
+        const normalizedEmail = (email ?? '').trim().toLowerCase();
+        const rawPassword = password ?? '';
+        if (!normalizedEmail || !rawPassword)
+            return null;
         const user = await this.prisma.user.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
             include: { branches: true },
         });
         if (!user)
             return null;
-        const ok = await bcrypt.compare(password, user.passwordHash);
+        const ok = await bcrypt.compare(rawPassword, user.passwordHash);
         if (!ok)
             return null;
-        const payload = {
+        const accessToken = await this.jwt.signAsync({
             sub: user.id,
-            email: user.email,
             companyId: user.companyId,
             role: user.role,
-        };
-        return { accessToken: await this.jwt.signAsync(payload) };
+        });
+        return { accessToken };
     }
 };
 exports.AuthService = AuthService;

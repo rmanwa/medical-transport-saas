@@ -104,6 +104,7 @@ export declare class DashboardService {
         };
     } & {
         id: string;
+        hospitalId: string | null;
         branchId: string;
         startTime: Date;
         endTime: Date;
@@ -111,7 +112,6 @@ export declare class DashboardService {
         type: import("@prisma/client").$Enums.MeetingType;
         priority: import("@prisma/client").$Enums.Priority;
         patientId: string;
-        hospitalId: string | null;
     })[]>;
     getScheduleRange(user: AuthUser, from: string, to: string, branchId?: string): Promise<({
         branch: {
@@ -134,6 +134,7 @@ export declare class DashboardService {
         };
     } & {
         id: string;
+        hospitalId: string | null;
         branchId: string;
         startTime: Date;
         endTime: Date;
@@ -141,7 +142,6 @@ export declare class DashboardService {
         type: import("@prisma/client").$Enums.MeetingType;
         priority: import("@prisma/client").$Enums.Priority;
         patientId: string;
-        hospitalId: string | null;
     })[]>;
     getUrgentQueue(user: AuthUser, branchId?: string): Promise<({
         branch: {
@@ -164,6 +164,7 @@ export declare class DashboardService {
         };
     } & {
         id: string;
+        hospitalId: string | null;
         branchId: string;
         startTime: Date;
         endTime: Date;
@@ -171,7 +172,6 @@ export declare class DashboardService {
         type: import("@prisma/client").$Enums.MeetingType;
         priority: import("@prisma/client").$Enums.Priority;
         patientId: string;
-        hospitalId: string | null;
     })[]>;
     getTopHospitals(user: AuthUser, branchId?: string): Promise<{
         hospital: {

@@ -102,6 +102,7 @@ export declare class DashboardController {
         };
     } & {
         id: string;
+        hospitalId: string | null;
         branchId: string;
         startTime: Date;
         endTime: Date;
@@ -109,7 +110,6 @@ export declare class DashboardController {
         type: import("@prisma/client").$Enums.MeetingType;
         priority: import("@prisma/client").$Enums.Priority;
         patientId: string;
-        hospitalId: string | null;
     })[]>;
     urgentQueue(req: RequestWithUser, branchId?: string): Promise<({
         branch: {
@@ -132,6 +132,7 @@ export declare class DashboardController {
         };
     } & {
         id: string;
+        hospitalId: string | null;
         branchId: string;
         startTime: Date;
         endTime: Date;
@@ -139,7 +140,6 @@ export declare class DashboardController {
         type: import("@prisma/client").$Enums.MeetingType;
         priority: import("@prisma/client").$Enums.Priority;
         patientId: string;
-        hospitalId: string | null;
     })[]>;
     topHospitals(req: RequestWithUser, branchId?: string): Promise<{
         hospital: {
@@ -170,6 +170,7 @@ export declare class DashboardController {
         };
     } & {
         id: string;
+        hospitalId: string | null;
         branchId: string;
         startTime: Date;
         endTime: Date;
@@ -177,6 +178,5 @@ export declare class DashboardController {
         type: import("@prisma/client").$Enums.MeetingType;
         priority: import("@prisma/client").$Enums.Priority;
         patientId: string;
-        hospitalId: string | null;
     })[]>;
 }

@@ -4,11 +4,11 @@ import type { AuthUser } from './api';
 
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { PatientsPage } from './pages/PatientsPage';
-import ShiftsPage from './pages/Shifts';
+import { ClientsPage } from './pages/ClientsPage';
+import AppointmentScheduler from './pages/AppointmentScheduler';
 import { HospitalsPage } from './pages/HospitalsPage';
 
-type Route = 'dashboard' | 'patients' | 'shifts' | 'hospitals';
+type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals';
 
 function cx(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -72,8 +72,8 @@ const Icons = {
 
 const NAV = [
   { key: 'dashboard' as const, label: 'Dashboard', icon: Icons.Home },
-  { key: 'patients' as const, label: 'Patients', icon: Icons.Users },
-  { key: 'shifts' as const, label: 'Scheduler', icon: Icons.Calendar },
+  { key: 'clients' as const, label: 'Clients', icon: Icons.Users },
+  { key: 'scheduler' as const, label: 'Scheduler', icon: Icons.Calendar },
   { key: 'hospitals' as const, label: 'Hospitals', icon: Icons.Building },
 ];
 
@@ -132,10 +132,10 @@ function MobileDrawer({
         <div className="border-b border-slate-200 p-4">
           <div className="flex items-center gap-3">
             <div className="grid h-10 w-10 place-items-center rounded-2xl bg-blue-600 text-white font-extrabold shadow-sm">
-              MT
+              AS
             </div>
             <div className="min-w-0">
-              <div className="text-base font-extrabold text-slate-900 leading-tight">Medical Transport</div>
+              <div className="text-base font-extrabold text-slate-900 leading-tight">Appointment Schedule</div>
               <div className="text-xs text-slate-600 leading-tight truncate">
                 {me.name} • {me.role}
               </div>
@@ -170,7 +170,7 @@ function MobileDrawer({
           <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div className="text-xs font-semibold text-slate-600">Quick tip</div>
             <div className="mt-1 text-sm text-slate-700">
-              Keep urgent rides highlighted and confirm time windows early.
+              Keep urgent appointments highlighted and confirm time windows early.
             </div>
           </div>
 
@@ -226,15 +226,15 @@ export default function App() {
 
   const pageTitle = useMemo(() => {
     if (route === 'dashboard') return 'Dashboard';
-    if (route === 'patients') return 'Patients';
-    if (route === 'shifts') return 'Scheduler';
+    if (route === 'clients') return 'Clients';
+    if (route === 'scheduler') return 'Appointment Scheduler';
     return 'Hospitals';
   }, [route]);
 
   const pageSubtitle = useMemo(() => {
     if (route === 'dashboard') return 'Overview of today and upcoming workload.';
-    if (route === 'patients') return 'Manage patient records by branch.';
-    if (route === 'shifts') return 'Create appointments and view schedule windows.';
+    if (route === 'clients') return 'Manage client records by branch.';
+    if (route === 'scheduler') return 'Create appointments and view schedule windows.';
     return 'Manage hospital destinations (company-wide).';
   }, [route]);
 
@@ -267,12 +267,12 @@ export default function App() {
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-white font-extrabold shadow-sm">
-                MT
+                AS
               </div>
               <div>
-                <div className="text-lg font-extrabold text-slate-900">Medical Transport</div>
+                <div className="text-lg font-extrabold text-slate-900">Appointment Schedule</div>
                 <div className="text-sm text-slate-600">
-                  Sign in to manage branches, patients, hospitals and schedules.
+                  Sign in to manage branches, clients, hospitals and schedules.
                 </div>
               </div>
             </div>
@@ -314,10 +314,10 @@ export default function App() {
               <div className="relative">
                 <div className="flex items-center gap-3">
                   <div className="grid h-10 w-10 place-items-center rounded-2xl bg-blue-600 text-white font-extrabold shadow-sm">
-                    MT
+                    AS
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-extrabold text-slate-900 leading-tight">Medical Transport</div>
+                    <div className="text-sm font-extrabold text-slate-900 leading-tight">Appointment Schedule</div>
                     <div className="text-xs text-slate-600 leading-tight truncate">{me.name} • {me.role}</div>
                   </div>
                 </div>
@@ -372,6 +372,7 @@ export default function App() {
                 <Icons.Menu className="h-6 w-6 text-slate-700" />
               </button>
 
+              {/* Title */}
               <div className="min-w-0">
                 <div className="text-lg md:text-2xl font-extrabold text-slate-900 leading-tight">
                   {pageTitle}
@@ -403,9 +404,9 @@ export default function App() {
             <div className="mb-5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-600/10 via-white to-slate-50 p-4 shadow-sm">
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="text-xs font-semibold text-slate-600">Today’s focus</div>
+                  <div className="text-xs font-semibold text-slate-600">Today's focus</div>
                   <div className="text-base md:text-lg font-extrabold text-slate-900">
-                    Fast scheduling, clean data, obvious urgent rides.
+                    Fast scheduling, clean data, obvious urgent appointments.
                   </div>
                 </div>
                 <div className="hidden md:flex gap-2">
@@ -422,8 +423,8 @@ export default function App() {
             {/* Page surface */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               {route === 'dashboard' && <DashboardPage />}
-              {route === 'patients' && <PatientsPage />}
-              {route === 'shifts' && <ShiftsPage />}
+              {route === 'clients' && <ClientsPage />}
+              {route === 'scheduler' && <AppointmentScheduler />}
               {route === 'hospitals' && <HospitalsPage />}
             </div>
           </main>

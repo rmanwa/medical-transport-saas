@@ -3,13 +3,24 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { config as loadEnv } from 'dotenv';
 import { join } from 'path';
+import { existsSync } from 'fs';
 
-loadEnv({ path: join(process.cwd(), '.env') });
+// Load env reliably whether we run from repo root or apps/api
+const candidates = [
+  join(process.cwd(), 'apps', 'api', '.env'), // when started from repo root
+  join(process.cwd(), '.env'),                // when started from apps/api
+];
+
+for (const p of candidates) {
+  if (existsSync(p)) {
+    loadEnv({ path: p });
+    break;
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Temporarily: DO NOT strip unknown fields until class-validator typings are stable
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: false,

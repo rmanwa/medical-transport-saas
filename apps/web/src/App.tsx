@@ -7,21 +7,12 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ClientsPage } from './pages/ClientsPage';
 import AppointmentScheduler from './pages/AppointmentScheduler';
 import { HospitalsPage } from './pages/HospitalsPage';
+import { ClinicsPage } from './pages/ClinicsPage';
 
-type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals';
+type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals' | 'clinics';
 
 function cx(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
-}
-
-function Icon({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <span className={cx('inline-flex items-center justify-center', className)}>{children}</span>;
 }
 
 const Icons = {
@@ -68,14 +59,27 @@ const Icons = {
       <path strokeLinecap="round" d="M20 12H10" />
     </svg>
   ),
+  Clinic: (props: { className?: string }) => (
+    <svg viewBox="0 0 24 24" className={props.className} fill="none" stroke="currentColor" strokeWidth="2">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v4m-2-2h4" />
+    </svg>
+  ),
 };
 
-const NAV = [
-  { key: 'dashboard' as const, label: 'Dashboard', icon: Icons.Home },
-  { key: 'clients' as const, label: 'Clients', icon: Icons.Users },
-  { key: 'scheduler' as const, label: 'Scheduler', icon: Icons.Calendar },
-  { key: 'hospitals' as const, label: 'Hospitals', icon: Icons.Building },
+// All possible nav items — Referral Clinics is SUPER_ADMIN only
+const ALL_NAV = [
+  { key: 'dashboard' as const, label: 'Dashboard', icon: Icons.Home, adminOnly: false },
+  { key: 'clients' as const, label: 'Clients', icon: Icons.Users, adminOnly: false },
+  { key: 'scheduler' as const, label: 'Scheduler', icon: Icons.Calendar, adminOnly: false },
+  { key: 'clinics' as const, label: 'Clinics', icon: Icons.Clinic, adminOnly: false },
+  { key: 'hospitals' as const, label: 'Referral Clinics', icon: Icons.Building, adminOnly: true },
 ];
+
+function getNavForUser(user: AuthUser) {
+  return ALL_NAV.filter((n) => !n.adminOnly || user.role === 'SUPER_ADMIN');
+}
 
 function NavItem({
   active,
@@ -102,6 +106,21 @@ function NavItem({
   );
 }
 
+function RoleBadge({ role }: { role: AuthUser['role'] }) {
+  return (
+    <span
+      className={cx(
+        'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+        role === 'SUPER_ADMIN'
+          ? 'bg-purple-100 text-purple-700'
+          : 'bg-slate-100 text-slate-600',
+      )}
+    >
+      {role === 'SUPER_ADMIN' ? 'Admin' : 'Staff'}
+    </span>
+  );
+}
+
 function MobileDrawer({
   open,
   onClose,
@@ -109,6 +128,7 @@ function MobileDrawer({
   setRoute,
   me,
   onLogout,
+  nav,
 }: {
   open: boolean;
   onClose: () => void;
@@ -116,6 +136,7 @@ function MobileDrawer({
   setRoute: (r: Route) => void;
   me: AuthUser;
   onLogout: () => void;
+  nav: typeof ALL_NAV;
 }) {
   return (
     <div className={cx('fixed inset-0 z-50 md:hidden', open ? '' : 'pointer-events-none')}>
@@ -134,15 +155,16 @@ function MobileDrawer({
             <div className="grid h-10 w-10 place-items-center rounded-2xl bg-blue-600 text-white font-extrabold shadow-sm">
               AS
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="text-base font-extrabold text-slate-900 leading-tight">Appointment Schedule</div>
-              <div className="text-xs text-slate-600 leading-tight truncate">
-                {me.name} • {me.role}
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-slate-600 truncate">{me.name}</span>
+                <RoleBadge role={me.role} />
               </div>
             </div>
             <button
               onClick={onClose}
-              className="ml-auto inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white"
               aria-label="Close menu"
             >
               <Icons.X className="h-5 w-5 text-slate-700" />
@@ -153,25 +175,15 @@ function MobileDrawer({
         <div className="p-3">
           <div className="px-2 pb-2 text-xs font-semibold text-slate-500">Navigation</div>
           <div className="flex flex-col gap-1">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <NavItem
                 key={n.key}
                 active={route === n.key}
-                onClick={() => {
-                  setRoute(n.key);
-                  onClose();
-                }}
+                onClick={() => { setRoute(n.key); onClose(); }}
                 icon={n.icon}
                 label={n.label}
               />
             ))}
-          </div>
-
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div className="text-xs font-semibold text-slate-600">Quick tip</div>
-            <div className="mt-1 text-sm text-slate-700">
-              Keep urgent appointments highlighted and confirm time windows early.
-            </div>
           </div>
 
           <button
@@ -190,14 +202,16 @@ function MobileDrawer({
 function MobileBottomBar({
   route,
   setRoute,
+  nav,
 }: {
   route: Route;
   setRoute: (r: Route) => void;
+  nav: typeof ALL_NAV;
 }) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden">
       <div className="mx-auto flex max-w-md items-center justify-between px-4 py-2">
-        {NAV.map((n) => {
+        {nav.map((n) => {
           const active = route === n.key;
           return (
             <button
@@ -224,18 +238,23 @@ export default function App() {
   const [bootError, setBootError] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Compute nav based on role
+  const nav = useMemo(() => (me ? getNavForUser(me) : []), [me]);
+
   const pageTitle = useMemo(() => {
     if (route === 'dashboard') return 'Dashboard';
     if (route === 'clients') return 'Clients';
     if (route === 'scheduler') return 'Appointment Scheduler';
-    return 'Hospitals';
+    if (route === 'clinics') return 'Clinics';
+    return 'Referral Clinics';
   }, [route]);
 
   const pageSubtitle = useMemo(() => {
     if (route === 'dashboard') return 'Overview of today and upcoming workload.';
     if (route === 'clients') return 'Manage client records by branch.';
     if (route === 'scheduler') return 'Create appointments and view schedule windows.';
-    return 'Manage hospital destinations (company-wide).';
+    if (route === 'clinics') return 'View and manage clinic branches.';
+    return 'Manage referral clinic destinations (company-wide).';
   }, [route]);
 
   async function bootstrap() {
@@ -243,6 +262,10 @@ export default function App() {
     try {
       const res = await getMe();
       setMe(res.user);
+      // If STAFF tries to access referral clinics page, redirect to dashboard
+      if (res.user.role === 'STAFF' && route === 'hospitals') {
+        setRoute('dashboard');
+      }
     } catch (e: any) {
       setMe(null);
       setBootError(e?.message ?? String(e));
@@ -251,8 +274,15 @@ export default function App() {
 
   useEffect(() => {
     bootstrap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Guard: if STAFF somehow navigates to referral clinics, bounce them
+  useEffect(() => {
+    if (me?.role === 'STAFF' && route === 'hospitals') {
+      setRoute('dashboard');
+    }
+  }, [me, route]);
   function logout() {
     clearToken();
     setMe(null);
@@ -272,7 +302,7 @@ export default function App() {
               <div>
                 <div className="text-lg font-extrabold text-slate-900">Appointment Schedule</div>
                 <div className="text-sm text-slate-600">
-                  Sign in to manage branches, clients, hospitals and schedules.
+                  Sign in to manage branches, clients, clinics and schedules.
                 </div>
               </div>
             </div>
@@ -294,7 +324,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      {/* Mobile drawer */}
       <MobileDrawer
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
@@ -302,6 +331,7 @@ export default function App() {
         setRoute={setRoute}
         me={me}
         onLogout={logout}
+        nav={nav}
       />
 
       <div className="flex flex-col md:flex-row">
@@ -318,11 +348,11 @@ export default function App() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-extrabold text-slate-900 leading-tight">Appointment Schedule</div>
-                    <div className="text-xs text-slate-600 leading-tight truncate">{me.name} • {me.role}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-slate-600 truncate">{me.name}</span>
+                      <RoleBadge role={me.role} />
+                    </div>
                   </div>
-                </div>
-                <div className="mt-3 text-xs font-semibold text-slate-500">
-                  Operations Console
                 </div>
               </div>
             </div>
@@ -331,7 +361,7 @@ export default function App() {
           <div className="px-3">
             <div className="px-3 pb-2 text-xs font-semibold tracking-wide text-slate-500">Navigation</div>
             <div className="flex flex-col gap-1">
-              {NAV.map((n) => (
+              {nav.map((n) => (
                 <NavItem
                   key={n.key}
                   active={route === n.key}
@@ -351,19 +381,13 @@ export default function App() {
               <Icons.Logout className="h-5 w-5" />
               Logout
             </button>
-            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-              <div className="font-bold text-slate-900">Tip</div>
-              Keep urgent appointments obvious and time windows accurate.
-            </div>
           </div>
         </aside>
 
         {/* Main */}
         <div className="flex-1">
-          {/* Top header */}
           <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
             <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 md:px-6">
-              {/* Mobile hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="md:hidden inline-flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm"
@@ -372,22 +396,20 @@ export default function App() {
                 <Icons.Menu className="h-6 w-6 text-slate-700" />
               </button>
 
-              {/* Title */}
               <div className="min-w-0">
                 <div className="text-lg md:text-2xl font-extrabold text-slate-900 leading-tight">
                   {pageTitle}
                 </div>
-                <div className="text-sm text-slate-600 hidden sm:block">
-                  {pageSubtitle}
-                </div>
+                <div className="text-sm text-slate-600 hidden sm:block">{pageSubtitle}</div>
               </div>
 
               <div className="ml-auto hidden md:flex items-center gap-3">
                 <div className="text-right">
                   <div className="text-sm font-bold text-slate-900">{me.name}</div>
-                  <div className="text-xs text-slate-600">{me.role}</div>
+                  <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                    <RoleBadge role={me.role} />
+                  </div>
                 </div>
-
                 <button
                   onClick={logout}
                   className="rounded-xl border border-slate-200 bg-white px-3 font-semibold text-slate-800 hover:bg-slate-100 transition h-10"
@@ -398,41 +420,19 @@ export default function App() {
             </div>
           </header>
 
-          {/* Content */}
           <main className="mx-auto max-w-6xl px-4 py-6 md:px-6 pb-24 md:pb-10">
-            {/* Lively ribbon */}
-            <div className="mb-5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-600/10 via-white to-slate-50 p-4 shadow-sm">
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="text-xs font-semibold text-slate-600">Today's focus</div>
-                  <div className="text-base md:text-lg font-extrabold text-slate-900">
-                    Fast scheduling, clean data, obvious urgent appointments.
-                  </div>
-                </div>
-                <div className="hidden md:flex gap-2">
-                  <button className="h-10 rounded-xl border border-slate-200 bg-white px-3 font-semibold text-slate-900 shadow-sm hover:bg-slate-50 transition">
-                    View reports
-                  </button>
-                  <button className="h-10 rounded-xl bg-blue-600 px-3 font-semibold text-white shadow-sm hover:bg-blue-700 transition">
-                    New appointment
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Page surface */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              {route === 'dashboard' && <DashboardPage />}
-              {route === 'clients' && <ClientsPage />}
-              {route === 'scheduler' && <AppointmentScheduler />}
-              {route === 'hospitals' && <HospitalsPage />}
+              {route === 'dashboard' && <DashboardPage user={me} />}
+              {route === 'clients' && <ClientsPage user={me} />}
+              {route === 'scheduler' && <AppointmentScheduler user={me} />}
+              {route === 'clinics' && <ClinicsPage user={me} />}
+              {route === 'hospitals' && me.role === 'SUPER_ADMIN' && <HospitalsPage />}
             </div>
           </main>
         </div>
       </div>
 
-      {/* Mobile bottom bar */}
-      <MobileBottomBar route={route} setRoute={setRoute} />
+      <MobileBottomBar route={route} setRoute={setRoute} nav={nav} />
     </div>
   );
 }

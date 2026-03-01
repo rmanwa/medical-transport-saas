@@ -1,5 +1,4 @@
 export type Role = 'SUPER_ADMIN' | 'STAFF';
-export type Priority = 'NORMAL' | 'URGENT';
 export type MeetingType = 'PHYSICAL' | 'VIRTUAL';
 
 export type AuthUser = {
@@ -41,7 +40,6 @@ export type ShiftRow = {
   endTime: string;
   notes: string | null;
   type: MeetingType;
-  priority: Priority;
   patientId: string;
   branchId: string;
   hospitalId: string | null;
@@ -64,6 +62,34 @@ export type DashboardOverview = {
 
 export type LoginResponse = { accessToken: string };
 
+// ─── Date Utilities ───────────────────────────────────────────────────────────
+
+/**
+ * Formats any ISO date string or Date object to MMDDYYYY.
+ * e.g. "2025-07-04T10:00:00Z" → "07/04/2025"
+ */
+export function toMMDDYYYY(value: string | Date): string {
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (isNaN(d.getTime())) return '—';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${mm}/${dd}/${yyyy}`;
+}
+
+/**
+ * Formats an ISO datetime to MM/DD/YYYY h:mm AM/PM (local time).
+ */
+export function toMMDDYYYYTime(value: string | Date): string {
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (isNaN(d.getTime())) return '—';
+  const date = toMMDDYYYY(d);
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${date} ${time}`;
+}
+
+// ─── Token ────────────────────────────────────────────────────────────────────
+
 const TOKEN_KEY = 'accessToken';
 
 export function getToken(): string {
@@ -76,16 +102,13 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-async function apiFetch(path: string, init?: RequestInit) {
-  const headers: Record<string, string> = {
-    ...(init?.headers as any),
-  };
+// ─── Fetch helpers ────────────────────────────────────────────────────────────
 
+async function apiFetch(path: string, init?: RequestInit) {
+  const headers: Record<string, string> = { ...(init?.headers as any) };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-
   const res = await fetch(`/api${path}`, { ...init, headers });
-
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`${init?.method || 'GET'} ${path} failed (${res.status}): ${text || res.statusText}`);
@@ -107,7 +130,8 @@ export async function apiPost<T>(path: string, body: any): Promise<T> {
   return (await res.json()) as T;
 }
 
-// Auth
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
 export async function login(email: string, password: string): Promise<LoginResponse> {
   return apiPost<LoginResponse>('/auth/login', { email, password });
 }
@@ -116,7 +140,8 @@ export async function getMe(): Promise<{ user: AuthUser }> {
   return apiGet<{ user: AuthUser }>('/me');
 }
 
-// Core
+// ─── Core ─────────────────────────────────────────────────────────────────────
+
 export async function getBranches(): Promise<Branch[]> {
   return apiGet<Branch[]>('/branches');
 }
@@ -125,11 +150,15 @@ export async function getPatients(branchId: string): Promise<Patient[]> {
   return apiGet<Patient[]>(`/branches/${encodeURIComponent(branchId)}/patients`);
 }
 
-export async function createPatient(branchId: string, body: { firstName: string; lastName: string; gender: string; dateOfBirth: string }) {
+export async function createPatient(
+  branchId: string,
+  body: { firstName: string; lastName: string; gender: string; dateOfBirth: string },
+) {
   return apiPost<Patient>(`/branches/${encodeURIComponent(branchId)}/patients`, body);
 }
 
-// Dashboard
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
 export async function getDashboardOverview(): Promise<DashboardOverview> {
   return apiGet<DashboardOverview>('/dashboard');
 }
@@ -140,7 +169,8 @@ export async function getScheduleRange(params: { from: string; to: string; branc
   return apiGet<ShiftRow[]>(`/dashboard/schedule/range?${qs.toString()}`);
 }
 
-// Hospitals
+// ─── Hospitals ────────────────────────────────────────────────────────────────
+
 export async function getHospitals(): Promise<Hospital[]> {
   return apiGet<Hospital[]>('/hospitals');
 }
@@ -163,7 +193,8 @@ export async function deleteHospital(id: string): Promise<{ ok: true }> {
   return (await res.json()) as { ok: true };
 }
 
-// Shifts
+// ─── Shifts ───────────────────────────────────────────────────────────────────
+
 export async function createShift(
   branchId: string,
   body: {
@@ -171,7 +202,6 @@ export async function createShift(
     endTime: string;
     notes?: string;
     type?: MeetingType;
-    priority?: Priority;
     patientId: string;
     hospitalId?: string | null;
   },

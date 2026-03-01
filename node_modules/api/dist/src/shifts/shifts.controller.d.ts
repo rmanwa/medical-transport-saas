@@ -15,8 +15,8 @@ export declare class ShiftsController {
     constructor(prisma: PrismaService);
     createShift(branchId: string, body: CreateShiftBody, req: RequestWithUser): Promise<{
         id: string;
-        hospitalId: string | null;
         branchId: string;
+        hospitalId: string | null;
         startTime: Date;
         endTime: Date;
         notes: string | null;

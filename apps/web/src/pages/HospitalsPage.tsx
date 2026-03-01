@@ -5,10 +5,10 @@ import { Card, CardHeader, CardBody } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal, ModalActions } from '../ui/Modal';
-import { Badge } from '../ui/Badge';
 import { useToast } from '../ui/Toast';
 
-// Icons
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
 const SearchIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -46,12 +46,19 @@ const TrashIcon = () => (
   </svg>
 );
 
+const RefreshIcon = () => (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+  </svg>
+);
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function HospitalsPage() {
   const { showToast } = useToast();
   const [rows, setRows] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
   const [q, setQ] = useState('');
 
   // Create modal
@@ -61,19 +68,21 @@ export function HospitalsPage() {
 
   // Edit modal
   const [editOpen, setEditOpen] = useState(false);
-  const [editId, setEditId] = useState<string>('');
+  const [editId, setEditId] = useState('');
   const [editName, setEditName] = useState('');
   const [editAddress, setEditAddress] = useState('');
 
   // Delete confirmation
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<string>('');
+  const [deleteId, setDeleteId] = useState('');
   const [deleteName, setDeleteName] = useState('');
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return rows;
-    return rows.filter((h) => (h.name + ' ' + h.address).toLowerCase().includes(needle));
+    return rows.filter((h) =>
+      (h.name + ' ' + h.address).toLowerCase().includes(needle),
+    );
   }, [rows, q]);
 
   async function refresh() {
@@ -83,8 +92,8 @@ export function HospitalsPage() {
       const data = await getHospitals();
       setRows(data);
     } catch (e: any) {
-      setError(e?.message ?? 'Failed to load hospitals');
-      showToast(e?.message ?? 'Failed to load hospitals', 'error');
+      setError(e?.message ?? 'Failed to load referral clinics');
+      showToast(e?.message ?? 'Failed to load referral clinics', 'error');
     } finally {
       setLoading(false);
     }
@@ -98,14 +107,8 @@ export function HospitalsPage() {
   async function onCreate() {
     const n = name.trim();
     const a = address.trim();
-    if (!n) {
-      setError('Hospital name is required.');
-      return;
-    }
-    if (!a) {
-      setError('Hospital address is required.');
-      return;
-    }
+    if (!n) { setError('Clinic name is required.'); return; }
+    if (!a) { setError('Clinic address is required.'); return; }
 
     setLoading(true);
     setError('');
@@ -114,11 +117,11 @@ export function HospitalsPage() {
       setName('');
       setAddress('');
       setCreateOpen(false);
-      showToast('Hospital added successfully', 'success');
+      showToast('Referral clinic added successfully', 'success');
       await refresh();
     } catch (e: any) {
-      setError(e?.message ?? 'Failed to create hospital');
-      showToast(e?.message ?? 'Failed to create hospital', 'error');
+      setError(e?.message ?? 'Failed to create referral clinic');
+      showToast(e?.message ?? 'Failed to create referral clinic', 'error');
     } finally {
       setLoading(false);
     }
@@ -134,14 +137,8 @@ export function HospitalsPage() {
   async function onSaveEdit() {
     const n = editName.trim();
     const a = editAddress.trim();
-    if (!n) {
-      setError('Hospital name is required.');
-      return;
-    }
-    if (!a) {
-      setError('Hospital address is required.');
-      return;
-    }
+    if (!n) { setError('Clinic name is required.'); return; }
+    if (!a) { setError('Clinic address is required.'); return; }
 
     setLoading(true);
     setError('');
@@ -151,8 +148,8 @@ export function HospitalsPage() {
       showToast('Changes saved successfully', 'success');
       await refresh();
     } catch (e: any) {
-      setError(e?.message ?? 'Failed to update hospital');
-      showToast(e?.message ?? 'Failed to update hospital', 'error');
+      setError(e?.message ?? 'Failed to update referral clinic');
+      showToast(e?.message ?? 'Failed to update referral clinic', 'error');
     } finally {
       setLoading(false);
     }
@@ -170,11 +167,11 @@ export function HospitalsPage() {
     try {
       await deleteHospital(deleteId);
       setDeleteOpen(false);
-      showToast('Hospital deleted', 'success');
+      showToast('Referral clinic deleted', 'success');
       await refresh();
     } catch (e: any) {
-      setError(e?.message ?? 'Failed to delete hospital');
-      showToast(e?.message ?? 'Failed to delete hospital', 'error');
+      setError(e?.message ?? 'Failed to delete referral clinic');
+      showToast(e?.message ?? 'Failed to delete referral clinic', 'error');
     } finally {
       setLoading(false);
     }
@@ -182,32 +179,27 @@ export function HospitalsPage() {
 
   return (
     <div className="space-y-6">
+
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Hospitals</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Referral Clinics</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Manage clinic and hospital destinations across all branches
+            Manage referral clinic destinations across all branches
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={<PlusIcon />}
-          onClick={() => setCreateOpen(true)}
-        >
-          Add Hospital
+        <Button variant="primary" icon={<PlusIcon />} onClick={() => { setError(''); setCreateOpen(true); }}>
+          Add Clinic
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-blue-100 p-3 text-blue-600">
-              <BuildingIcon />
-            </div>
+            <div className="rounded-xl bg-blue-100 p-3 text-blue-600"><BuildingIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Total Hospitals</p>
+              <p className="text-sm font-medium text-slate-600">Total Clinics</p>
               <p className="text-2xl font-bold text-slate-900">{rows.length}</p>
             </div>
           </div>
@@ -229,34 +221,18 @@ export function HospitalsPage() {
 
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-amber-100 p-3 text-amber-600">
-              <LocationIcon />
-            </div>
+            <div className="rounded-xl bg-amber-100 p-3 text-amber-600"><LocationIcon /></div>
             <div>
               <p className="text-sm font-medium text-slate-600">Locations</p>
               <p className="text-2xl font-bold text-slate-900">{rows.length}</p>
             </div>
           </div>
         </Card>
-
-        <Card variant="elevated" padding="md">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-purple-100 p-3 text-purple-600">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-600">This Month</p>
-              <p className="text-2xl font-bold text-slate-900">+{Math.floor(rows.length / 3)}</p>
-            </div>
-          </div>
-        </Card>
       </div>
 
-      {/* Search and Filter */}
+      {/* Search */}
       <Card>
-        <CardHeader title="Search Hospitals" />
+        <CardHeader title="Search Clinics" />
         <CardBody>
           <Input
             placeholder="Search by name or address..."
@@ -267,15 +243,12 @@ export function HospitalsPage() {
         </CardBody>
       </Card>
 
-      {/* Hospitals List */}
+      {/* Table */}
       <Card>
         <CardHeader
-          title={`All Hospitals (${filtered.length})`}
+          title={`All Referral Clinics (${filtered.length})`}
           right={
-            <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+            <Button variant="ghost" size="sm" icon={<RefreshIcon />} onClick={refresh} disabled={loading}>
               Refresh
             </Button>
           }
@@ -284,151 +257,153 @@ export function HospitalsPage() {
           {loading && rows.length === 0 ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 animate-pulse rounded-xl bg-slate-100" />
+                <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-100" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="rounded-full bg-slate-100 p-4">
-                <BuildingIcon />
-              </div>
+              <div className="rounded-full bg-slate-100 p-4"><BuildingIcon /></div>
               <p className="mt-4 text-sm font-medium text-slate-600">
-                {q ? 'No hospitals found matching your search' : 'No hospitals yet'}
+                {q ? 'No clinics found matching your search' : 'No referral clinics yet'}
               </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-4"
-                onClick={() => setCreateOpen(true)}
-              >
-                Add your first hospital
+              <Button variant="ghost" size="sm" className="mt-4" onClick={() => setCreateOpen(true)}>
+                Add your first clinic
               </Button>
             </div>
           ) : (
-            <div className="space-y-2">
-              {filtered.map((h) => (
-                <div
-                  key={h.id}
-                  className="group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-200 hover:shadow-md sm:flex-row sm:items-center"
-                >
-                  <div className="flex min-w-0 flex-1 items-start gap-3">
-                    <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
-                      <BuildingIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="truncate font-bold text-slate-900">{h.name}</h4>
-                        <Badge variant="primary" size="sm">
-                          Active
-                        </Badge>
-                      </div>
-                      <div className="mt-1 flex items-center gap-1 text-sm text-slate-600">
-                        <LocationIcon />
-                        <span className="truncate">{h.address}</span>
-                      </div>
-                    </div>
-                  </div>
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">#</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Clinic Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Address</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {filtered.map((h, idx) => (
+                    <tr
+                      key={h.id}
+                      className={`transition-colors hover:bg-blue-50/40 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
+                    >
+                      {/* Row number */}
+                      <td className="px-4 py-3 text-xs font-mono text-slate-400">
+                        {String(idx + 1).padStart(2, '0')}
+                      </td>
 
-                  <div className="flex shrink-0 gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<EditIcon />}
-                      onClick={() => openEdit(h)}
-                      disabled={loading}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      icon={<TrashIcon />}
-                      onClick={() => openDelete(h)}
-                      disabled={loading}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                      {/* Name */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                            <BuildingIcon />
+                          </div>
+                          <span className="font-semibold text-slate-900">{h.name}</span>
+                        </div>
+                      </td>
+
+                      {/* Address */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5 text-slate-600">
+                          <LocationIcon />
+                          <span>{h.address}</span>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-xs font-semibold text-green-700">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
+                          Active
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon={<EditIcon />}
+                            onClick={() => { setError(''); openEdit(h); }}
+                            disabled={loading}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            icon={<TrashIcon />}
+                            onClick={() => openDelete(h)}
+                            disabled={loading}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardBody>
       </Card>
 
-      {/* Create Modal */}
-      <Modal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        title="Add New Hospital"
-        size="md"
-      >
+      {/* ── Create Modal ── */}
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Add Referral Clinic" size="md">
         <div className="space-y-4">
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-              {error}
-            </div>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>
           )}
-
           <Input
-            label="Hospital Name"
+            label="Clinic Name"
             placeholder="e.g., Downtown Medical Center"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             leftIcon={<BuildingIcon />}
           />
-
           <Input
             label="Address"
-            placeholder="e.g., 123 Main St, Chicago, IL 60601"
+            placeholder="e.g., 123 Main St, Nairobi"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             required
             leftIcon={<LocationIcon />}
           />
-
           <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
             <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <span>This hospital will be available to all branches in your company.</span>
+            <span>This clinic will be available as a referral destination for all branches.</span>
           </div>
         </div>
-
         <div className="mt-6">
           <ModalActions
             onCancel={() => setCreateOpen(false)}
             onConfirm={onCreate}
             cancelLabel="Cancel"
-            confirmLabel="Add Hospital"
+            confirmLabel="Add Clinic"
             loading={loading}
           />
         </div>
       </Modal>
 
-      {/* Edit Modal */}
-      <Modal
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        title="Edit Hospital"
-        size="md"
-      >
+      {/* ── Edit Modal ── */}
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Referral Clinic" size="md">
         <div className="space-y-4">
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-              {error}
-            </div>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>
           )}
-
           <Input
-            label="Hospital Name"
+            label="Clinic Name"
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
             required
             leftIcon={<BuildingIcon />}
           />
-
           <Input
             label="Address"
             value={editAddress}
@@ -437,7 +412,6 @@ export function HospitalsPage() {
             leftIcon={<LocationIcon />}
           />
         </div>
-
         <div className="mt-6">
           <ModalActions
             onCancel={() => setEditOpen(false)}
@@ -449,19 +423,14 @@ export function HospitalsPage() {
         </div>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        title="Delete Hospital"
-        size="sm"
-      >
+      {/* ── Delete Confirmation Modal ── */}
+      <Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete Referral Clinic" size="sm">
         <div className="space-y-4">
           <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
             <svg className="h-6 w-6 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <div className="flex-1">
+            <div>
               <h4 className="font-bold text-red-900">Warning</h4>
               <p className="mt-1 text-sm text-red-800">
                 Are you sure you want to delete <strong>{deleteName}</strong>? This action cannot be undone.
@@ -469,18 +438,18 @@ export function HospitalsPage() {
             </div>
           </div>
         </div>
-
         <div className="mt-6">
           <ModalActions
             onCancel={() => setDeleteOpen(false)}
             onConfirm={onConfirmDelete}
             cancelLabel="Cancel"
-            confirmLabel="Delete Hospital"
+            confirmLabel="Delete Clinic"
             loading={loading}
             variant="danger"
           />
         </div>
       </Modal>
+
     </div>
   );
 }

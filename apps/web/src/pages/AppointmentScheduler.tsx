@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { createShift, getBranches, getHospitals, getPatients, getScheduleRange } from '../api';
-import type { Branch, Hospital, MeetingType, Patient, Priority, ShiftRow } from '../api';
+import { createShift, getBranches, getHospitals, getPatients, getScheduleRange, toMMDDYYYY, toMMDDYYYYTime } from '../api';
+import type { AuthUser, Branch, Hospital, MeetingType, Patient, ShiftRow } from '../api';
 import { Card, CardHeader, CardBody } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
-import { Badge } from '../ui/Badge';
 import { Modal, ModalActions } from '../ui/Modal';
 import { useToast } from '../ui/Toast';
 
@@ -51,10 +50,9 @@ const AlertIcon = () => (
   </svg>
 );
 
-// Helper functions
-function pad2(n: number) {
-  return n < 10 ? `0${n}` : `${n}`;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function pad2(n: number) { return n < 10 ? `0${n}` : `${n}`; }
 
 function toLocalDateTimeInputValue(d: Date) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
@@ -67,29 +65,26 @@ function addMinutes(d: Date, minutes: number) {
 }
 
 function startOfDayLocal(d: Date) {
-  const x = new Date(d.getTime());
-  x.setHours(0, 0, 0, 0);
-  return x;
+  const x = new Date(d.getTime()); x.setHours(0, 0, 0, 0); return x;
 }
 
 function endOfDayLocal(d: Date) {
-  const x = new Date(d.getTime());
-  x.setHours(23, 59, 59, 999);
-  return x;
+  const x = new Date(d.getTime()); x.setHours(23, 59, 59, 999); return x;
 }
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+// ─── Props ────────────────────────────────────────────────────────────────────
+
+interface AppointmentSchedulerProps {
+  user: AuthUser;
 }
 
-export default function AppointmentScheduler() {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function AppointmentScheduler({ user }: AppointmentSchedulerProps) {
   const { showToast } = useToast();
+
+  const canSwitchBranch = user.role === 'SUPER_ADMIN' || user.canAccessAllBranches;
+
   const [branches, setBranches] = useState<Branch[]>([]);
   const [clients, setClients] = useState<Patient[]>([]);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
@@ -100,43 +95,46 @@ export default function AppointmentScheduler() {
   const [rangeFrom, setRangeFrom] = useState(() => toLocalDateTimeInputValue(startOfDayLocal(new Date())));
   const [rangeTo, setRangeTo] = useState(() => toLocalDateTimeInputValue(endOfDayLocal(new Date())));
 
+  // Create modal state — Priority removed: every appointment is urgent
   const [createOpen, setCreateOpen] = useState(false);
   const [clientId, setClientId] = useState('');
-  const [hospitalId, setHospitalId] = useState<string>('');
+  const [hospitalId, setHospitalId] = useState('');
   const [type, setType] = useState<MeetingType>('PHYSICAL');
-  const [priority, setPriority] = useState<Priority>('NORMAL');
   const [notes, setNotes] = useState('');
   const [startTime, setStartTime] = useState(() => toLocalDateTimeInputValue(new Date()));
   const [endTime, setEndTime] = useState(() => toLocalDateTimeInputValue(addMinutes(new Date(), 30)));
 
-  const selectedBranch = useMemo(() => branches.find((b) => b.id === branchId) || null, [branches, branchId]);
+  const selectedBranch = useMemo(() => branches.find((b) => b.id === branchId) ?? null, [branches, branchId]);
   const hasClients = clients.length > 0;
 
   const stats = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(today);
-    todayEnd.setHours(23, 59, 59, 999);
-
-    const todayAppointments = schedule.filter((s) => {
-      const start = new Date(s.startTime);
-      return start >= today && start <= todayEnd;
-    });
-
+    const today = startOfDayLocal(new Date());
+    const todayEnd = endOfDayLocal(new Date());
     return {
       total: schedule.length,
-      today: todayAppointments.length,
-      urgent: schedule.filter((s) => s.priority === 'URGENT').length,
+      today: schedule.filter((s) => {
+        const d = new Date(s.startTime);
+        return d >= today && d <= todayEnd;
+      }).length,
       physical: schedule.filter((s) => s.type === 'PHYSICAL').length,
+      virtual: schedule.filter((s) => s.type === 'VIRTUAL').length,
     };
   }, [schedule]);
 
+  /** Filter all company branches down to those this user can see */
+  function scopeBranches(all: Branch[]): Branch[] {
+    if (canSwitchBranch) return all;
+    return all.filter((b) => user.branchIds.includes(b.id));
+  }
+
+  // Load branches (scoped)
   useEffect(() => {
     (async () => {
       try {
-        const data = await getBranches();
-        setBranches(data);
-        if (data.length && !branchId) setBranchId(data[0].id);
+        const all = await getBranches();
+        const scoped = scopeBranches(all);
+        setBranches(scoped);
+        if (scoped.length && !branchId) setBranchId(scoped[0].id);
       } catch (e: any) {
         showToast(e?.message ?? 'Failed to load branches', 'error');
       }
@@ -144,6 +142,7 @@ export default function AppointmentScheduler() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Load hospitals (all users can see clinics for booking)
   useEffect(() => {
     (async () => {
       try {
@@ -156,12 +155,12 @@ export default function AppointmentScheduler() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Load clients for the selected branch
   useEffect(() => {
     if (!branchId) return;
     (async () => {
       try {
-        setClients([]);
-        setClientId('');
+        setClients([]); setClientId('');
         const data = await getPatients(branchId);
         setClients(data);
         if (data.length) setClientId(data[0].id);
@@ -173,16 +172,14 @@ export default function AppointmentScheduler() {
   }, [branchId]);
 
   async function refreshSchedule() {
-    if (!branchId) {
-      showToast('Please select a branch', 'warning');
-      return;
-    }
-
+    if (!branchId) { showToast('Please select a branch', 'warning'); return; }
     setLoading(true);
     try {
-      const fromIso = new Date(rangeFrom).toISOString();
-      const toIso = new Date(rangeTo).toISOString();
-      const data = await getScheduleRange({ from: fromIso, to: toIso, branchId });
+      const data = await getScheduleRange({
+        from: new Date(rangeFrom).toISOString(),
+        to: new Date(rangeTo).toISOString(),
+        branchId,
+      });
       setSchedule(data);
     } catch (e: any) {
       showToast(e?.message ?? 'Failed to load schedule', 'error');
@@ -192,51 +189,46 @@ export default function AppointmentScheduler() {
   }
 
   useEffect(() => {
-    if (branchId) {
-      refreshSchedule();
-    }
+    if (branchId) refreshSchedule();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId, rangeFrom, rangeTo]);
 
-  async function setQuickRange(type: 'today' | 'tomorrow' | 'week') {
+  function setQuickRange(preset: 'today' | 'tomorrow' | 'week') {
     const now = new Date();
     let from: Date, to: Date;
-
-    if (type === 'today') {
-      from = startOfDayLocal(now);
-      to = endOfDayLocal(now);
-    } else if (type === 'tomorrow') {
-      from = startOfDayLocal(addMinutes(now, 24 * 60));
-      to = endOfDayLocal(addMinutes(now, 24 * 60));
+    if (preset === 'today') {
+      from = startOfDayLocal(now); to = endOfDayLocal(now);
+    } else if (preset === 'tomorrow') {
+      const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+      from = startOfDayLocal(tomorrow); to = endOfDayLocal(tomorrow);
     } else {
       from = startOfDayLocal(now);
-      to = endOfDayLocal(addMinutes(now, 7 * 24 * 60));
+      const week = new Date(now); week.setDate(week.getDate() + 7);
+      to = endOfDayLocal(week);
     }
-
     setRangeFrom(toLocalDateTimeInputValue(from));
     setRangeTo(toLocalDateTimeInputValue(to));
   }
 
+  // Sanitize a value for datetime-local input — strips seconds/ms/timezone if present
+  function sanitizeDateTimeInput(val: string): string {
+    if (!val) return val;
+    // Already in correct format yyyy-MM-ddThh:mm
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(val)) return val;
+    // ISO string or other — convert via Date
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    return toLocalDateTimeInputValue(d);
+  }
+
   async function onCreate() {
-    if (!branchId) {
-      showToast('Please select a branch', 'error');
-      return;
-    }
-    if (!hasClients) {
-      showToast('No clients in this branch', 'error');
-      return;
-    }
-    if (!clientId) {
-      showToast('Please select a client', 'error');
-      return;
-    }
+    if (!branchId) { showToast('Please select a branch', 'error'); return; }
+    if (!hasClients) { showToast('No clients in this branch', 'error'); return; }
+    if (!clientId) { showToast('Please select a client', 'error'); return; }
 
     const start = new Date(startTime);
     const end = new Date(endTime);
-    if (end <= start) {
-      showToast('End time must be after start time', 'error');
-      return;
-    }
+    if (end <= start) { showToast('End time must be after start time', 'error'); return; }
 
     setLoading(true);
     try {
@@ -244,12 +236,11 @@ export default function AppointmentScheduler() {
         startTime: start.toISOString(),
         endTime: end.toISOString(),
         type,
-        priority,
+        // Priority removed — all appointments are urgent by business logic
         notes: notes.trim() || undefined,
         patientId: clientId,
         hospitalId: hospitalId || null,
       });
-
       showToast('Appointment created successfully!', 'success');
       setNotes('');
       setCreateOpen(false);
@@ -263,27 +254,33 @@ export default function AppointmentScheduler() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Appointment Scheduler</h1>
           <p className="mt-1 text-sm text-slate-600">Create and manage client appointments</p>
         </div>
-        <Button variant="primary" icon={<PlusIcon />} onClick={() => setCreateOpen(true)} disabled={!branchId || !hasClients}>
+        <Button
+          variant="primary"
+          icon={<PlusIcon />}
+          onClick={() => setCreateOpen(true)}
+          disabled={!branchId || !hasClients}
+        >
           New Appointment
         </Button>
       </div>
 
+      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-blue-100 p-3 text-blue-600"><CalendarIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Total Appointments</p>
+              <p className="text-sm font-medium text-slate-600">Total</p>
               <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
             </div>
           </div>
         </Card>
-
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-green-100 p-3 text-green-600"><ClockIcon /></div>
@@ -293,38 +290,72 @@ export default function AppointmentScheduler() {
             </div>
           </div>
         </Card>
-
-        <Card variant="elevated" padding="md">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-red-100 p-3 text-red-600"><AlertIcon /></div>
-            <div>
-              <p className="text-sm font-medium text-slate-600">Urgent</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.urgent}</p>
-            </div>
-          </div>
-        </Card>
-
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-purple-100 p-3 text-purple-600"><BuildingIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Physical Visits</p>
+              <p className="text-sm font-medium text-slate-600">Physical</p>
               <p className="text-2xl font-bold text-slate-900">{stats.physical}</p>
+            </div>
+          </div>
+        </Card>
+        <Card variant="elevated" padding="md">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-cyan-100 p-3 text-cyan-600"><CalendarIcon /></div>
+            <div>
+              <p className="text-sm font-medium text-slate-600">Virtual</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.virtual}</p>
             </div>
           </div>
         </Card>
       </div>
 
+      {/* Filters */}
       <Card>
         <CardHeader title="Filters" />
         <CardBody>
           <div className="space-y-4">
-            <Select label="Branch" value={branchId} onChange={(e) => setBranchId(e.target.value)} disabled={loading}>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </Select>
+            {/* Branch: full selector for admins, locked display for staff */}
+            {canSwitchBranch ? (
+              <Select
+                label="Branch"
+                value={branchId}
+                onChange={(e) => setBranchId(e.target.value)}
+                disabled={loading}
+              >
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </Select>
+            ) : (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Branch
+                  {branches.length > 1 && (
+                    <span className="ml-1.5 text-xs font-normal text-slate-500">(your assigned branches)</span>
+                  )}
+                </label>
+                {branches.length === 1 ? (
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 h-11">
+                    <span className="font-medium text-slate-800">{branches[0].name}</span>
+                    <span className="ml-auto text-xs text-slate-400 italic">assigned</span>
+                  </div>
+                ) : (
+                  <Select
+                    label=""
+                    value={branchId}
+                    onChange={(e) => setBranchId(e.target.value)}
+                    disabled={loading}
+                  >
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </Select>
+                )}
+              </div>
+            )}
 
+            {/* Quick range buttons */}
             <div className="flex flex-wrap gap-2">
               <Button variant="ghost" size="sm" onClick={() => setQuickRange('today')}>Today</Button>
               <Button variant="ghost" size="sm" onClick={() => setQuickRange('tomorrow')}>Tomorrow</Button>
@@ -337,7 +368,7 @@ export default function AppointmentScheduler() {
                 <input
                   type="datetime-local"
                   className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                  value={rangeFrom}
+                  value={sanitizeDateTimeInput(rangeFrom)}
                   onChange={(e) => setRangeFrom(e.target.value)}
                 />
               </div>
@@ -346,7 +377,7 @@ export default function AppointmentScheduler() {
                 <input
                   type="datetime-local"
                   className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                  value={rangeTo}
+                  value={sanitizeDateTimeInput(rangeTo)}
                   onChange={(e) => setRangeTo(e.target.value)}
                 />
               </div>
@@ -355,12 +386,13 @@ export default function AppointmentScheduler() {
         </CardBody>
       </Card>
 
+      {/* Schedule Table */}
       <Card>
         <CardHeader title={`Schedule (${schedule.length})`} />
         <CardBody>
           {loading && schedule.length === 0 ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (<div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100" />))}
+              {[1, 2, 3].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100" />)}
             </div>
           ) : schedule.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
@@ -368,45 +400,120 @@ export default function AppointmentScheduler() {
               <p className="mt-4 text-sm font-medium text-slate-600">No appointments in this range</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {schedule.map((s) => (
-                <div key={s.id} className="group rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-200 hover:shadow-md">
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <Badge variant={s.priority === 'URGENT' ? 'danger' : 'default'} dot>{s.priority}</Badge>
-                    <Badge variant="primary">{s.type}</Badge>
-                    <span className="text-sm text-slate-600">{s.branch?.name || s.branchId}</span>
-                  </div>
-                  <div className="mb-2 flex items-center gap-2">
-                    <UserIcon />
-                    <span className="font-bold text-slate-900">
-                      {s.patient ? `${s.patient.firstName} ${s.patient.lastName}` : s.patientId}
-                    </span>
-                  </div>
-                  <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
-                    <ClockIcon />
-                    <span>{formatDateTime(s.startTime)} → {formatDateTime(s.endTime)}</span>
-                  </div>
-                  {s.hospital && (
-                    <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
-                      <BuildingIcon />
-                      <span>{s.hospital.name}</span>
-                    </div>
-                  )}
-                  {s.notes && (
-                    <div className="mt-3 rounded-lg bg-slate-50 p-3">
-                      <div className="mb-1 flex items-center gap-1 text-xs font-semibold text-slate-600">
-                        <NoteIcon /><span>Notes</span>
-                      </div>
-                      <p className="text-sm text-slate-700">{s.notes}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
+                      Patient Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
+                      Time
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
+                      Nature
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
+                      Clinic / Branch
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
+                      Clinic
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
+                      Notes
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {schedule.map((s, idx) => {
+                    const name = s.patient
+                      ? `${s.patient.firstName} ${s.patient.lastName}`
+                      : s.patientId.slice(0, 8);
+                    const date = toMMDDYYYY(s.startTime);
+                    const startT = new Date(s.startTime).toLocaleTimeString('en-US', {
+                      hour: 'numeric', minute: '2-digit', hour12: true,
+                    });
+                    const endT = new Date(s.endTime).toLocaleTimeString('en-US', {
+                      hour: 'numeric', minute: '2-digit', hour12: true,
+                    });
+                    return (
+                      <tr
+                        key={s.id}
+                        className={`transition-colors hover:bg-blue-50/40 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
+                      >
+                        {/* Patient */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-xs font-bold">
+                              {name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </div>
+                            <span className="font-semibold text-slate-900">{name}</span>
+                          </div>
+                        </td>
+
+                        {/* Date */}
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-700 font-medium">
+                          {date}
+                        </td>
+
+                        {/* Time */}
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                          <div className="flex items-center gap-1">
+                            <ClockIcon />
+                            <span>{startT} – {endT}</span>
+                          </div>
+                        </td>
+
+                        {/* Nature of appointment */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            s.type === 'PHYSICAL'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-purple-50 text-purple-700 border border-purple-200'
+                          }`}>
+                            {s.type === 'PHYSICAL' ? '🏥 Physical' : '💻 Virtual'}
+                          </span>
+                        </td>
+
+                        {/* Clinic / Branch */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 text-slate-700">
+                            <BuildingIcon />
+                            <span>{s.branch?.name ?? s.branchId}</span>
+                          </div>
+                        </td>
+
+                        {/* Clinic */}
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                          {s.hospital?.name ?? (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Notes */}
+                        <td className="px-4 py-3 max-w-[180px]">
+                          {s.notes ? (
+                            <span className="block truncate text-slate-500 italic" title={s.notes}>
+                              {s.notes}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </CardBody>
       </Card>
 
+      {/* Create Modal — Priority field removed */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Create Appointment" size="lg">
         <div className="space-y-4">
           {!hasClients && (
@@ -416,13 +523,23 @@ export default function AppointmentScheduler() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select label="Client" value={clientId} onChange={(e) => setClientId(e.target.value)} disabled={!hasClients} required>
+            <Select
+              label="Client"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              disabled={!hasClients}
+              required
+            >
               {clients.map((p) => (
                 <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>
               ))}
             </Select>
 
-            <Select label="Hospital (Optional)" value={hospitalId} onChange={(e) => setHospitalId(e.target.value)}>
+            <Select
+              label="Clinic (Optional)"
+              value={hospitalId}
+              onChange={(e) => setHospitalId(e.target.value)}
+            >
               <option value="">None</option>
               {hospitals.map((h) => (
                 <option key={h.id} value={h.id}>{h.name}</option>
@@ -430,21 +547,22 @@ export default function AppointmentScheduler() {
             </Select>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Select label="Type" value={type} onChange={(e) => setType(e.target.value as MeetingType)} required>
-              <option value="PHYSICAL">Physical Visit</option>
-              <option value="VIRTUAL">Virtual (Telehealth)</option>
-            </Select>
-
-            <Select label="Priority" value={priority} onChange={(e) => setPriority(e.target.value as Priority)} required>
-              <option value="NORMAL">Normal</option>
-              <option value="URGENT">Urgent</option>
-            </Select>
-          </div>
+          {/* Type only — Priority removed */}
+          <Select
+            label="Appointment Type"
+            value={type}
+            onChange={(e) => setType(e.target.value as MeetingType)}
+            required
+          >
+            <option value="PHYSICAL">Physical Visit</option>
+            <option value="VIRTUAL">Virtual (Telehealth)</option>
+          </Select>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-700">Start Time <span className="text-red-500">*</span></label>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                Start Time <span className="text-red-500">*</span>
+              </label>
               <input
                 type="datetime-local"
                 className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
@@ -459,10 +577,14 @@ export default function AppointmentScheduler() {
                 }}
                 required
               />
+              {startTime && (
+                <p className="mt-1 text-xs text-slate-500">{toMMDDYYYYTime(new Date(startTime).toISOString())}</p>
+              )}
             </div>
-
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-700">End Time <span className="text-red-500">*</span></label>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                End Time <span className="text-red-500">*</span>
+              </label>
               <input
                 type="datetime-local"
                 className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
@@ -470,6 +592,9 @@ export default function AppointmentScheduler() {
                 onChange={(e) => setEndTime(e.target.value)}
                 required
               />
+              {endTime && (
+                <p className="mt-1 text-xs text-slate-500">{toMMDDYYYYTime(new Date(endTime).toISOString())}</p>
+              )}
             </div>
           </div>
 
@@ -487,7 +612,7 @@ export default function AppointmentScheduler() {
             <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <span>Appointment will be created for {selectedBranch?.name}.</span>
+            <span>Appointment will be created for <strong>{selectedBranch?.name}</strong>.</span>
           </div>
         </div>
 

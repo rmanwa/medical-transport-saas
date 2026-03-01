@@ -1,6 +1,17 @@
+import { PrismaService } from '../prisma/prisma.service';
 import type { RequestWithUser } from '../common/types/request-with-user';
 export declare class MeController {
-    getMe(req: RequestWithUser): {
-        user: Express.User & import("../common/types/request-with-user").AuthUser;
-    };
+    private readonly prisma;
+    constructor(prisma: PrismaService);
+    getMe(req: RequestWithUser): Promise<{
+        user: {
+            id: string;
+            email: string;
+            name: string;
+            role: import("@prisma/client").$Enums.Role;
+            companyId: string;
+            canAccessAllBranches: boolean;
+            branchIds: string[];
+        };
+    }>;
 }

@@ -102,8 +102,8 @@ export declare class DashboardController {
         };
     } & {
         id: string;
-        hospitalId: string | null;
         branchId: string;
+        hospitalId: string | null;
         startTime: Date;
         endTime: Date;
         notes: string | null;
@@ -132,8 +132,8 @@ export declare class DashboardController {
         };
     } & {
         id: string;
-        hospitalId: string | null;
         branchId: string;
+        hospitalId: string | null;
         startTime: Date;
         endTime: Date;
         notes: string | null;
@@ -170,8 +170,8 @@ export declare class DashboardController {
         };
     } & {
         id: string;
-        hospitalId: string | null;
         branchId: string;
+        hospitalId: string | null;
         startTime: Date;
         endTime: Date;
         notes: string | null;

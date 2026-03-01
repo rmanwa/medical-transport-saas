@@ -63,9 +63,13 @@ let AuthService = class AuthService {
             where: { email: normalizedEmail },
             include: { branches: true },
         });
+        console.log('User found:', user?.email);
+        console.log('Stored hash:', user?.passwordHash);
+        console.log('Password to compare:', rawPassword);
         if (!user)
             return null;
         const ok = await bcrypt.compare(rawPassword, user.passwordHash);
+        console.log('Password match:', ok);
         if (!ok)
             return null;
         const accessToken = await this.jwt.signAsync({

@@ -20,10 +20,10 @@ type CardBodyProps = React.HTMLAttributes<HTMLDivElement>;
 type CardFooterProps = React.HTMLAttributes<HTMLDivElement>;
 
 const variantClasses = {
-  default: 'bg-white border border-slate-200 shadow-sm',
-  elevated: 'bg-white shadow-lg border border-slate-100',
-  bordered: 'bg-white border-2 border-slate-200',
-  glass: 'bg-white/80 backdrop-blur-md border border-white/20 shadow-lg',
+  default: 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm',
+  elevated: 'bg-white dark:bg-slate-800 shadow-lg border border-slate-100 dark:border-slate-700',
+  bordered: 'bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700',
+  glass: 'bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-white/20 dark:border-slate-700/20 shadow-lg',
 };
 
 const paddingClasses = {
@@ -60,13 +60,13 @@ export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div
         ref={ref}
-        className={cn('flex items-start gap-3 pb-4 border-b border-slate-100', className)}
+        className={cn('flex items-start gap-3 pb-4 border-b border-slate-100 dark:border-slate-700', className)}
         {...props}
       >
         {(title || subtitle) && (
           <div className="min-w-0 flex-1">
-            {title && <h3 className="text-base font-bold text-slate-900 leading-tight">{title}</h3>}
-            {subtitle && <p className="mt-1 text-sm text-slate-600">{subtitle}</p>}
+            {title && <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>}
+            {subtitle && <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{subtitle}</p>}
           </div>
         )}
         {children}
@@ -95,7 +95,7 @@ export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
     return (
       <div
         ref={ref}
-        className={cn('flex items-center gap-2 pt-4 border-t border-slate-100', className)}
+        className={cn('flex items-center gap-2 pt-4 border-t border-slate-100 dark:border-slate-700', className)}
         {...props}
       >
         {children}

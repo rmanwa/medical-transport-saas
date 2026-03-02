@@ -197,7 +197,7 @@ export function HospitalsPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-blue-100 p-3 text-blue-600"><BuildingIcon /></div>
+            <div className="rounded-xl bg-blue-100 dark:bg-blue-900/30 p-3 text-blue-600 dark:text-blue-400"><BuildingIcon /></div>
             <div>
               <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Clinics</p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">{rows.length}</p>
@@ -207,24 +207,24 @@ export function HospitalsPage() {
 
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-green-100 p-3 text-green-600">
+            <div className="rounded-xl bg-green-100 dark:bg-green-900/30 p-3 text-green-600 dark:text-green-400">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Active</p>
-              <p className="text-2xl font-bold text-slate-900">{rows.length}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Active</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{rows.length}</p>
             </div>
           </div>
         </Card>
 
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-amber-100 p-3 text-amber-600"><LocationIcon /></div>
+            <div className="rounded-xl bg-amber-100 dark:bg-amber-900/30 p-3 text-amber-600 dark:text-amber-400"><LocationIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Locations</p>
-              <p className="text-2xl font-bold text-slate-900">{rows.length}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Locations</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{rows.length}</p>
             </div>
           </div>
         </Card>
@@ -257,7 +257,7 @@ export function HospitalsPage() {
           {loading && rows.length === 0 ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-100" />
+                <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-700" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -282,7 +282,7 @@ export function HospitalsPage() {
                     <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                   {filtered.map((h, idx) => (
                     <tr
                       key={h.id}
@@ -355,7 +355,7 @@ export function HospitalsPage() {
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Add Referral Clinic" size="md">
         <div className="space-y-4">
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>
+            <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-800 dark:text-red-300">{error}</div>
           )}
           <Input
             label="Clinic Name"
@@ -373,7 +373,7 @@ export function HospitalsPage() {
             required
             leftIcon={<LocationIcon />}
           />
-          <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+          <div className="flex items-center gap-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3 text-sm text-blue-800 dark:text-blue-300">
             <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
@@ -395,7 +395,7 @@ export function HospitalsPage() {
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Referral Clinic" size="md">
         <div className="space-y-4">
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>
+            <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-800 dark:text-red-300">{error}</div>
           )}
           <Input
             label="Clinic Name"

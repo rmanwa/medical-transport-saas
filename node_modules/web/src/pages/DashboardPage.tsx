@@ -160,11 +160,11 @@ export function DashboardPage({ user }: DashboardPageProps) {
       {isSuperAdmin && overview && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <StatCard icon={<ChartIcon />} label="Hospitals" value={overview.hospitalsTotal} color="blue" />
-          <StatCard icon={<ChartIcon />} label="Total Patients" value={overview.patientsTotal} color="green" />
-          <StatCard icon={<ChartIcon />} label="Total Shifts" value={overview.shiftsTotal} color="purple" />
+          <StatCard icon={<ChartIcon />} label="Total Clients" value={overview.patientsTotal} color="green" />
+          <StatCard icon={<ChartIcon />} label="Total Appointments" value={overview.shiftsTotal} color="purple" />
           <StatCard icon={<ChartIcon />} label="Today" value={overview.shiftsToday} color="cyan" />
           <StatCard icon={<ChartIcon />} label="Next 7 Days" value={overview.shiftsNext7Days} color="amber" />
-          <StatCard icon={<ChartIcon />} label="Urgent Today" value={overview.urgentToday} color="red" />
+          
         </div>
       )}
 

@@ -157,6 +157,26 @@ export async function createPatient(
   return apiPost<Patient>(`/branches/${encodeURIComponent(branchId)}/patients`, body);
 }
 
+export async function updatePatient(
+  branchId: string,
+  patientId: string,
+  body: { firstName?: string; lastName?: string; gender?: string; dateOfBirth?: string },
+): Promise<Patient> {
+  const res = await apiFetch(`/branches/${encodeURIComponent(branchId)}/patients/${encodeURIComponent(patientId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return (await res.json()) as Patient;
+}
+
+export async function deletePatient(branchId: string, patientId: string): Promise<{ ok: true }> {
+  const res = await apiFetch(`/branches/${encodeURIComponent(branchId)}/patients/${encodeURIComponent(patientId)}`, {
+    method: 'DELETE',
+  });
+  return (await res.json()) as { ok: true };
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export async function getDashboardOverview(): Promise<DashboardOverview> {

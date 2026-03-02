@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { PrismaModule } from './prisma/prisma.module';
-//import { MockAuthMiddleware } from './auth/mock-auth.middleware';
 import { MeModule } from './me/me.module';
 import { BranchesModule } from './branches/branches.module';
 import { HospitalsModule } from './hospitals/hospitals.module';
@@ -8,6 +7,9 @@ import { PatientsModule } from './patients/patients.module';
 import { ShiftsModule } from './shifts/shifts.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
+import { SetupModule } from './setup/setup.module';
+import { StaffModule } from './staff/staff.module';
+
 @Module({
   imports: [
     PrismaModule,
@@ -18,6 +20,8 @@ import { AuthModule } from './auth/auth.module';
     ShiftsModule,
     DashboardModule,
     AuthModule,
+    SetupModule,
+    StaffModule,
   ],
 })
 export class AppModule implements NestModule {

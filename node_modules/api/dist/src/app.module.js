@@ -16,6 +16,8 @@ const patients_module_1 = require("./patients/patients.module");
 const shifts_module_1 = require("./shifts/shifts.module");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
 const auth_module_1 = require("./auth/auth.module");
+const setup_module_1 = require("./setup/setup.module");
+const staff_module_1 = require("./staff/staff.module");
 let AppModule = class AppModule {
     configure(consumer) {
     }
@@ -32,6 +34,8 @@ exports.AppModule = AppModule = __decorate([
             shifts_module_1.ShiftsModule,
             dashboard_module_1.DashboardModule,
             auth_module_1.AuthModule,
+            setup_module_1.SetupModule,
+            staff_module_1.StaffModule,
         ],
     })
 ], AppModule);

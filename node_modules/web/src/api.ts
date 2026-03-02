@@ -62,6 +62,24 @@ export type DashboardOverview = {
 
 export type LoginResponse = { accessToken: string };
 
+export type StaffMember = {
+  id: string;
+  email: string;
+  name: string;
+  role: Role;
+  canAccessAllBranches: boolean;
+  branches: { id: string; name: string }[];
+};
+
+export type SetupPayload = {
+  adminName: string;
+  adminEmail: string;
+  adminPassword: string;
+  companyName: string;
+  branchName: string;
+  branchAddress: string;
+};
+
 // ─── Date Utilities ───────────────────────────────────────────────────────────
 
 /**
@@ -130,6 +148,27 @@ export async function apiPost<T>(path: string, body: any): Promise<T> {
   return (await res.json()) as T;
 }
 
+// ─── Setup (no auth required) ─────────────────────────────────────────────────
+
+export async function getSetupStatus(): Promise<{ needsSetup: boolean }> {
+  const res = await fetch('/api/setup/status');
+  if (!res.ok) throw new Error('Failed to check setup status');
+  return res.json();
+}
+
+export async function performSetup(payload: SetupPayload): Promise<LoginResponse> {
+  const res = await fetch('/api/setup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(text || 'Setup failed');
+  }
+  return res.json();
+}
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
@@ -140,11 +179,17 @@ export async function getMe(): Promise<{ user: AuthUser }> {
   return apiGet<{ user: AuthUser }>('/me');
 }
 
-// ─── Core ─────────────────────────────────────────────────────────────────────
+// ─── Branches ─────────────────────────────────────────────────────────────────
 
 export async function getBranches(): Promise<Branch[]> {
   return apiGet<Branch[]>('/branches');
 }
+
+export async function createBranch(body: { name: string; address: string }): Promise<Branch> {
+  return apiPost<Branch>('/branches', body);
+}
+
+// ─── Patients ─────────────────────────────────────────────────────────────────
 
 export async function getPatients(branchId: string): Promise<Patient[]> {
   return apiGet<Patient[]>(`/branches/${encodeURIComponent(branchId)}/patients`);
@@ -211,6 +256,54 @@ export async function updateHospital(id: string, body: { name?: string; address?
 export async function deleteHospital(id: string): Promise<{ ok: true }> {
   const res = await apiFetch(`/hospitals/${encodeURIComponent(id)}`, { method: 'DELETE' });
   return (await res.json()) as { ok: true };
+}
+
+// ─── Staff Management (SUPER_ADMIN only) ──────────────────────────────────────
+
+export async function getStaff(): Promise<StaffMember[]> {
+  return apiGet<StaffMember[]>('/staff');
+}
+
+export async function getStaffMember(id: string): Promise<StaffMember> {
+  return apiGet<StaffMember>(`/staff/${encodeURIComponent(id)}`);
+}
+
+export async function inviteStaff(body: {
+  name: string;
+  email: string;
+  password: string;
+  branchIds: string[];
+}): Promise<{ id: string; email: string; name: string; role: string; branchIds: string[] }> {
+  return apiPost('/staff/invite', body);
+}
+
+export async function updateStaff(
+  id: string,
+  body: { name?: string; email?: string },
+): Promise<{ id: string; email: string; name: string; role: string }> {
+  const res = await apiFetch(`/staff/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return (await res.json()) as any;
+}
+
+export async function updateStaffBranches(
+  id: string,
+  branchIds: string[],
+): Promise<{ ok: true; branchIds: string[] }> {
+  const res = await apiFetch(`/staff/${encodeURIComponent(id)}/branches`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ branchIds }),
+  });
+  return (await res.json()) as any;
+}
+
+export async function deleteStaff(id: string): Promise<{ ok: true }> {
+  const res = await apiFetch(`/staff/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  return (await res.json()) as any;
 }
 
 // ─── Shifts ───────────────────────────────────────────────────────────────────

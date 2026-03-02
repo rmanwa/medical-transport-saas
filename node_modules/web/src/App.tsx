@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { clearToken, getMe } from './api';
+import { clearToken, getMe, getSetupStatus } from './api';
 import type { AuthUser } from './api';
 
 import { LoginPage } from './pages/LoginPage';
@@ -9,8 +9,9 @@ import AppointmentScheduler from './pages/AppointmentScheduler';
 import { HospitalsPage } from './pages/HospitalsPage';
 import { BranchesPage } from './pages/BranchesPage';
 import { ExportPage } from './pages/ExportPage';
-
-type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals' | 'branches' | 'export';
+import { SetupWizardPage } from './pages/SetupWizardPage';
+import { StaffPage } from './pages/StaffPage';
+type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals' | 'branches' | 'export'| 'staff';
 
 function cx(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -83,6 +84,11 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
     </svg>
   ),
+  Staff: (props: { className?: string }) => (
+    <svg viewBox="0 0 24 24" className={props.className} fill="none" stroke="currentColor" strokeWidth="2">
+      <path strokeLinecap="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  ),
 };
 
 // SUPER_ADMIN: Dashboard, Clients, Scheduler, Branches, Clinics, Export
@@ -94,6 +100,7 @@ const ALL_NAV = [
   { key: 'branches'  as const, label: 'Branches',  icon: Icons.Building, adminOnly: true  },
   { key: 'hospitals' as const, label: 'Clinics',   icon: Icons.Clinic,   adminOnly: false },
   { key: 'export'    as const, label: 'Export',    icon: Icons.Export,   adminOnly: true  },
+  { key: 'staff'     as const, label: 'Staff',     icon: Icons.Staff,    adminOnly: true  },
 ];
 
 function getNavForUser(user: AuthUser) {
@@ -256,6 +263,7 @@ export default function App() {
   const [route, setRoute] = useState<Route>('dashboard');
   const [bootError, setBootError] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
 
   // ── Dark mode ──────────────────────────────────────────────────────────────
   const [dark, setDark] = useState<boolean>(() => {
@@ -284,7 +292,7 @@ export default function App() {
   const pageTitle = useMemo((): string => {
     const titles: Record<Route, string> = {
       dashboard: 'Dashboard', clients: 'Clients', scheduler: 'Appointment Scheduler',
-      branches: 'Branches', hospitals: 'Clinics', export: 'Export Reports',
+      branches: 'Branches', hospitals: 'Clinics', export: 'Export Reports', staff: 'Staff Management',
     };
     return titles[route] ?? 'Dashboard';
   }, [route]);
@@ -297,6 +305,7 @@ export default function App() {
       branches: 'Manage company branches (North, West, Central etc).',
       hospitals: 'Manage clinic destinations for appointments.',
       export: 'Download appointment and client data as CSV files.',
+      staff: 'Invite team members and manage branch access.',
     };
     return subs[route] ?? '';
   }, [route]);
@@ -304,9 +313,13 @@ export default function App() {
   async function bootstrap() {
     setBootError('');
     try {
+      const {needsSetup: ns} = await getSetupStatus();
+      setNeedsSetup(ns);
+      if (ns) return;
+
       const res = await getMe();
       setMe(res.user);
-      if (res.user.role === 'STAFF' && (route === 'branches' || route === 'export')) {
+      if (res.user.role === 'STAFF' && (route === 'branches' || route === 'export' || route === 'staff')) {
         setRoute('dashboard');
       }
     } catch (e: any) {
@@ -318,7 +331,7 @@ export default function App() {
   useEffect(() => { bootstrap(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (me?.role === 'STAFF' && (route === 'branches' || route === 'export')) {
+    if (me?.role === 'STAFF' && (route === 'branches' || route === 'export' || route === 'staff')) {
       setRoute('dashboard');
     }
   }, [me, route]);
@@ -329,6 +342,9 @@ export default function App() {
     setRoute('dashboard');
     setMobileMenuOpen(false);
   }
+  if (needsSetup) {
+  return <SetupWizardPage onComplete={bootstrap} />;
+}
 
   // ── Login screen ───────────────────────────────────────────────────────────
   if (!me) {

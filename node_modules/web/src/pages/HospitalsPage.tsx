@@ -183,8 +183,8 @@ export function HospitalsPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Referral Clinics</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Referral Clinics</h1>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Manage referral clinic destinations across all branches
           </p>
         </div>
@@ -199,8 +199,8 @@ export function HospitalsPage() {
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-blue-100 p-3 text-blue-600"><BuildingIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Total Clinics</p>
-              <p className="text-2xl font-bold text-slate-900">{rows.length}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Clinics</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{rows.length}</p>
             </div>
           </div>
         </Card>
@@ -262,8 +262,8 @@ export function HospitalsPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="rounded-full bg-slate-100 p-4"><BuildingIcon /></div>
-              <p className="mt-4 text-sm font-medium text-slate-600">
+              <div className="rounded-full bg-slate-100 dark:bg-slate-700 p-4"><BuildingIcon /></div>
+              <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-400">
                 {q ? 'No clinics found matching your search' : 'No referral clinics yet'}
               </p>
               <Button variant="ghost" size="sm" className="mt-4" onClick={() => setCreateOpen(true)}>
@@ -271,41 +271,41 @@ export function HospitalsPage() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">#</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Clinic Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Address</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
+                  <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/60">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">#</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Clinic Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Address</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {filtered.map((h, idx) => (
                     <tr
                       key={h.id}
-                      className={`transition-colors hover:bg-blue-50/40 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}
+                      className={`transition-colors hover:bg-blue-50/40 dark:hover:bg-blue-900/10 ${idx % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/40 dark:bg-slate-700/20'}`}
                     >
                       {/* Row number */}
-                      <td className="px-4 py-3 text-xs font-mono text-slate-400">
+                      <td className="px-4 py-3 text-xs font-mono text-slate-400 dark:text-slate-500">
                         {String(idx + 1).padStart(2, '0')}
                       </td>
 
                       {/* Name */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
                             <BuildingIcon />
                           </div>
-                          <span className="font-semibold text-slate-900">{h.name}</span>
+                          <span className="font-semibold text-slate-900 dark:text-white">{h.name}</span>
                         </div>
                       </td>
 
                       {/* Address */}
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5 text-slate-600">
+                        <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                           <LocationIcon />
                           <span>{h.address}</span>
                         </div>
@@ -313,7 +313,7 @@ export function HospitalsPage() {
 
                       {/* Status */}
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-xs font-semibold text-green-700">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-2.5 py-1 text-xs font-semibold text-green-700 dark:text-green-400">
                           <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
                           Active
                         </span>
@@ -426,13 +426,13 @@ export function HospitalsPage() {
       {/* ── Delete Confirmation Modal ── */}
       <Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete Referral Clinic" size="sm">
         <div className="space-y-4">
-          <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
-            <svg className="h-6 w-6 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-start gap-3 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
+            <svg className="h-6 w-6 shrink-0 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div>
-              <h4 className="font-bold text-red-900">Warning</h4>
-              <p className="mt-1 text-sm text-red-800">
+              <h4 className="font-bold text-red-900 dark:text-red-300">Warning</h4>
+              <p className="mt-1 text-sm text-red-800 dark:text-red-300">
                 Are you sure you want to delete <strong>{deleteName}</strong>? This action cannot be undone.
               </p>
             </div>

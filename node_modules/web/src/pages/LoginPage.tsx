@@ -56,7 +56,7 @@ export function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 dark:from-slate-900 via-white dark:via-slate-900 to-slate-50 dark:to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo/Brand Card */}
         <Card variant="glass" className="text-center">
@@ -68,8 +68,8 @@ export function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
               </div>
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900">Appointment Schedule</h1>
-              <p className="mt-1 text-sm text-slate-600">Operations Console</p>
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white">Appointment Schedule</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Operations Console</p>
             </div>
           </div>
         </Card>
@@ -119,13 +119,13 @@ export function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
             </form>
 
             {/* Demo Credentials */}
-            <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
+            <div className="mt-6 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4">
               <div className="flex items-start gap-3">
                 <svg className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 <div className="flex-1">
-                  <h4 className="text-sm font-bold text-blue-900">Demo Credentials</h4>
+                  <h4 className="text-sm font-bold text-blue-900 dark:text-blue-200">Demo Credentials</h4>
                   <div className="mt-2 space-y-1 text-xs text-blue-800">
                     <div className="font-mono">
                       <strong>Manager:</strong> manager@acmemedtransport.com
@@ -144,7 +144,7 @@ export function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
         </Card>
 
         {/* Footer */}
-        <div className="text-center text-xs text-slate-500">
+        <div className="text-center text-xs text-slate-500 dark:text-slate-400">
           <p>Secure appointment scheduling and management</p>
           <p className="mt-1">© 2026 Appointment Schedule. All rights reserved.</p>
         </div>

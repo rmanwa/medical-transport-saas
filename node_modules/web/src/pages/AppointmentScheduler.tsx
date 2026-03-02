@@ -95,7 +95,6 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
   const [rangeFrom, setRangeFrom] = useState(() => toLocalDateTimeInputValue(startOfDayLocal(new Date())));
   const [rangeTo, setRangeTo] = useState(() => toLocalDateTimeInputValue(endOfDayLocal(new Date())));
 
-  // Create modal state — Priority removed: every appointment is urgent
   const [createOpen, setCreateOpen] = useState(false);
   const [clientId, setClientId] = useState('');
   const [hospitalId, setHospitalId] = useState('');
@@ -121,13 +120,11 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
     };
   }, [schedule]);
 
-  /** Filter all company branches down to those this user can see */
   function scopeBranches(all: Branch[]): Branch[] {
     if (canSwitchBranch) return all;
     return all.filter((b) => user.branchIds.includes(b.id));
   }
 
-  // Load branches (scoped)
   useEffect(() => {
     (async () => {
       try {
@@ -142,7 +139,6 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load hospitals (all users can see clinics for booking)
   useEffect(() => {
     (async () => {
       try {
@@ -155,7 +151,6 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load clients for the selected branch
   useEffect(() => {
     if (!branchId) return;
     (async () => {
@@ -210,12 +205,9 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
     setRangeTo(toLocalDateTimeInputValue(to));
   }
 
-  // Sanitize a value for datetime-local input — strips seconds/ms/timezone if present
   function sanitizeDateTimeInput(val: string): string {
     if (!val) return val;
-    // Already in correct format yyyy-MM-ddThh:mm
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(val)) return val;
-    // ISO string or other — convert via Date
     const d = new Date(val);
     if (isNaN(d.getTime())) return val;
     return toLocalDateTimeInputValue(d);
@@ -236,7 +228,6 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
         startTime: start.toISOString(),
         endTime: end.toISOString(),
         type,
-        // Priority removed — all appointments are urgent by business logic
         notes: notes.trim() || undefined,
         patientId: clientId,
         hospitalId: hospitalId || null,
@@ -257,8 +248,8 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Appointment Scheduler</h1>
-          <p className="mt-1 text-sm text-slate-600">Create and manage client appointments</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Appointment Scheduler</h1>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Create and manage client appointments</p>
         </div>
         <Button
           variant="primary"
@@ -274,37 +265,37 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-blue-100 p-3 text-blue-600"><CalendarIcon /></div>
+            <div className="rounded-xl bg-blue-100 dark:bg-blue-900/30 p-3 text-blue-600 dark:text-blue-400"><CalendarIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Total</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
             </div>
           </div>
         </Card>
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-green-100 p-3 text-green-600"><ClockIcon /></div>
+            <div className="rounded-xl bg-green-100 dark:bg-green-900/30 p-3 text-green-600 dark:text-green-400"><ClockIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Today</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.today}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Today</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.today}</p>
             </div>
           </div>
         </Card>
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-purple-100 p-3 text-purple-600"><BuildingIcon /></div>
+            <div className="rounded-xl bg-purple-100 dark:bg-purple-900/30 p-3 text-purple-600 dark:text-purple-400"><BuildingIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Physical</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.physical}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Physical</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.physical}</p>
             </div>
           </div>
         </Card>
         <Card variant="elevated" padding="md">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-cyan-100 p-3 text-cyan-600"><CalendarIcon /></div>
+            <div className="rounded-xl bg-cyan-100 dark:bg-cyan-900/30 p-3 text-cyan-600 dark:text-cyan-400"><CalendarIcon /></div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Virtual</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.virtual}</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Virtual</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.virtual}</p>
             </div>
           </div>
         </Card>
@@ -315,7 +306,6 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
         <CardHeader title="Filters" />
         <CardBody>
           <div className="space-y-4">
-            {/* Branch: full selector for admins, locked display for staff */}
             {canSwitchBranch ? (
               <Select
                 label="Branch"
@@ -329,16 +319,16 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
               </Select>
             ) : (
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Branch
                   {branches.length > 1 && (
-                    <span className="ml-1.5 text-xs font-normal text-slate-500">(your assigned branches)</span>
+                    <span className="ml-1.5 text-xs font-normal text-slate-500 dark:text-slate-400">(your assigned branches)</span>
                   )}
                 </label>
                 {branches.length === 1 ? (
-                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 h-11">
-                    <span className="font-medium text-slate-800">{branches[0].name}</span>
-                    <span className="ml-auto text-xs text-slate-400 italic">assigned</span>
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 px-4 h-11">
+                    <span className="font-medium text-slate-800 dark:text-slate-200">{branches[0].name}</span>
+                    <span className="ml-auto text-xs text-slate-400 dark:text-slate-500 italic">assigned</span>
                   </div>
                 ) : (
                   <Select
@@ -364,19 +354,19 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">From</label>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">From</label>
                 <input
                   type="datetime-local"
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-11 w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   value={sanitizeDateTimeInput(rangeFrom)}
                   onChange={(e) => setRangeFrom(e.target.value)}
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">To</label>
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">To</label>
                 <input
                   type="datetime-local"
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-11 w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   value={sanitizeDateTimeInput(rangeTo)}
                   onChange={(e) => setRangeTo(e.target.value)}
                 />
@@ -386,121 +376,84 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
         </CardBody>
       </Card>
 
-      {/* Schedule Table */}
+      {/* Appointments Table */}
       <Card>
-        <CardHeader title={`Schedule (${schedule.length})`} />
+        <CardHeader title={`Appointments (${schedule.length})`} />
         <CardBody>
           {loading && schedule.length === 0 ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100" />)}
+              {[1, 2, 3].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-700" />)}
             </div>
           ) : schedule.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="rounded-full bg-slate-100 p-4"><CalendarIcon /></div>
-              <p className="mt-4 text-sm font-medium text-slate-600">No appointments in this range</p>
+              <div className="rounded-full bg-slate-100 dark:bg-slate-700 p-4 text-slate-400 dark:text-slate-500"><CalendarIcon /></div>
+              <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-400">No appointments in this range</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
-                      Patient Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
-                      Time
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
-                      Nature
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
-                      Clinic / Branch
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
-                      Clinic
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
-                      Notes
-                    </th>
+                  <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/60">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 whitespace-nowrap">Patient Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 whitespace-nowrap">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 whitespace-nowrap">Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 whitespace-nowrap">Nature</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 whitespace-nowrap">Clinic / Branch</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 whitespace-nowrap">Clinic</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 whitespace-nowrap">Notes</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                   {schedule.map((s, idx) => {
                     const name = s.patient
                       ? `${s.patient.firstName} ${s.patient.lastName}`
                       : s.patientId.slice(0, 8);
                     const date = toMMDDYYYY(s.startTime);
-                    const startT = new Date(s.startTime).toLocaleTimeString('en-US', {
-                      hour: 'numeric', minute: '2-digit', hour12: true,
-                    });
-                    const endT = new Date(s.endTime).toLocaleTimeString('en-US', {
-                      hour: 'numeric', minute: '2-digit', hour12: true,
-                    });
+                    const startT = new Date(s.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    const endT = new Date(s.endTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
                     return (
                       <tr
                         key={s.id}
-                        className={`transition-colors hover:bg-blue-50/40 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
+                        className={`transition-colors hover:bg-blue-50/40 dark:hover:bg-blue-900/10 ${idx % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-700/20'}`}
                       >
-                        {/* Patient */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-xs font-bold">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold">
                               {name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-semibold text-slate-900">{name}</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">{name}</span>
                           </div>
                         </td>
-
-                        {/* Date */}
-                        <td className="px-4 py-3 whitespace-nowrap text-slate-700 font-medium">
-                          {date}
-                        </td>
-
-                        {/* Time */}
-                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{date}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">
                           <div className="flex items-center gap-1">
                             <ClockIcon />
                             <span>{startT} – {endT}</span>
                           </div>
                         </td>
-
-                        {/* Nature of appointment */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
                             s.type === 'PHYSICAL'
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'bg-purple-50 text-purple-700 border border-purple-200'
+                              ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                              : 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
                           }`}>
                             {s.type === 'PHYSICAL' ? '🏥 Physical' : '💻 Virtual'}
                           </span>
                         </td>
-
-                        {/* Clinic / Branch */}
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5 text-slate-700">
+                          <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                             <BuildingIcon />
                             <span>{s.branch?.name ?? s.branchId}</span>
                           </div>
                         </td>
-
-                        {/* Clinic */}
-                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-                          {s.hospital?.name ?? (
-                            <span className="text-slate-300">—</span>
-                          )}
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                          {s.hospital?.name ?? <span className="text-slate-300 dark:text-slate-600">—</span>}
                         </td>
-
-                        {/* Notes */}
                         <td className="px-4 py-3 max-w-[180px]">
                           {s.notes ? (
-                            <span className="block truncate text-slate-500 italic" title={s.notes}>
-                              {s.notes}
-                            </span>
+                            <span className="block truncate text-slate-500 dark:text-slate-400 italic" title={s.notes}>{s.notes}</span>
                           ) : (
-                            <span className="text-slate-300">—</span>
+                            <span className="text-slate-300 dark:text-slate-600">—</span>
                           )}
                         </td>
                       </tr>
@@ -513,11 +466,11 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
         </CardBody>
       </Card>
 
-      {/* Create Modal — Priority field removed */}
+      {/* Create Modal */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Create Appointment" size="lg">
         <div className="space-y-4">
           {!hasClients && (
-            <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="flex items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-300">
               <AlertIcon /><span>No clients in this branch. Please add clients first.</span>
             </div>
           )}
@@ -547,7 +500,6 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
             </Select>
           </div>
 
-          {/* Type only — Priority removed */}
           <Select
             label="Appointment Type"
             value={type}
@@ -560,12 +512,12 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Start Time <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                className="h-11 w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 value={startTime}
                 onChange={(e) => {
                   setStartTime(e.target.value);
@@ -578,37 +530,37 @@ export default function AppointmentScheduler({ user }: AppointmentSchedulerProps
                 required
               />
               {startTime && (
-                <p className="mt-1 text-xs text-slate-500">{toMMDDYYYYTime(new Date(startTime).toISOString())}</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{toMMDDYYYYTime(new Date(startTime).toISOString())}</p>
               )}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 End Time <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                className="h-11 w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 required
               />
               {endTime && (
-                <p className="mt-1 text-xs text-slate-500">{toMMDDYYYYTime(new Date(endTime).toISOString())}</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{toMMDDYYYYTime(new Date(endTime).toISOString())}</p>
               )}
             </div>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Notes (Optional)</label>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">Notes (Optional)</label>
             <textarea
-              className="min-h-[80px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+              className="min-h-[80px] w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
               placeholder="Add any special instructions..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+          <div className="flex items-center gap-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3 text-sm text-blue-800 dark:text-blue-300">
             <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>

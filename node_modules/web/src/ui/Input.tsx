@@ -40,17 +40,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     const variantClasses = {
       default: cn(
-        'bg-white border border-slate-200',
+        'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white',
         'focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10',
         error && 'border-red-500 focus:border-red-500 focus:ring-red-500/10'
       ),
       filled: cn(
-        'bg-slate-100 border border-transparent',
-        'focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10',
-        error && 'bg-red-50 border-red-500 focus:border-red-500 focus:ring-red-500/10'
+        'bg-slate-100 dark:bg-slate-700 border border-transparent',
+        'focus:bg-white dark:focus:bg-slate-600 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10',
+        error && 'bg-red-50 dark:bg-red-900/20 border-red-500 focus:border-red-500 focus:ring-red-500/10'
       ),
       flushed: cn(
-        'bg-transparent border-b-2 border-slate-200 rounded-none px-0',
+        'bg-transparent border-b-2 border-slate-200 dark:border-slate-600 rounded-none px-0',
         'focus:border-blue-500',
         error && 'border-red-500 focus:border-red-500'
       ),
@@ -59,7 +59,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={cn('space-y-1.5', fullWidth && 'w-full')}>
         {label && (
-          <label className="block text-sm font-semibold text-slate-700">
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
             {label}
             {props.required && <span className="ml-1 text-red-500">*</span>}
           </label>
@@ -67,7 +67,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
               {leftIcon}
             </div>
           )}
@@ -77,8 +77,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             className={cn(
               'w-full rounded-xl outline-none transition-all duration-200',
-              'placeholder:text-slate-400',
-              'disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-slate-50',
+              'placeholder:text-slate-400 dark:placeholder:text-slate-500',
+              'disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-slate-50 dark:disabled:bg-slate-800',
               sizeClasses[inputSize],
               variantClasses[variant],
               leftIcon && 'pl-10',
@@ -89,14 +89,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           />
 
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
               {rightIcon}
             </div>
           )}
         </div>
 
         {(error || helperText) && (
-          <p className={cn('text-xs', error ? 'text-red-600' : 'text-slate-500')}>
+          <p className={cn('text-xs', error ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400')}>
             {error || helperText}
           </p>
         )}

@@ -39,13 +39,9 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
   ) => {
     useEffect(() => {
       if (!closeOnEscape) return;
-
       const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape' && open) {
-          onClose();
-        }
+        if (e.key === 'Escape' && open) onClose();
       };
-
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }, [open, onClose, closeOnEscape]);
@@ -56,10 +52,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       } else {
         document.body.style.overflow = 'unset';
       }
-
-      return () => {
-        document.body.style.overflow = 'unset';
-      };
+      return () => { document.body.style.overflow = 'unset'; };
     }, [open]);
 
     if (!open) return null;
@@ -76,14 +69,15 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           aria-hidden="true"
         />
 
-        {/* Modal */}
+        {/* Modal panel */}
         <div
           ref={ref}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? 'modal-title' : undefined}
           className={cn(
-            'relative w-full rounded-2xl bg-white shadow-2xl',
+            'relative w-full rounded-2xl shadow-2xl',
+            'bg-white dark:bg-slate-800',
             'animate-in zoom-in-95 fade-in duration-200',
             'max-h-[90vh] flex flex-col',
             sizeClasses[size]
@@ -91,30 +85,21 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
-              <h2 id="modal-title" className="flex-1 text-lg font-bold text-slate-900">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+              <h2 id="modal-title" className="flex-1 text-lg font-bold text-slate-900 dark:text-white">
                 {title}
               </h2>
               <button
                 onClick={onClose}
                 className={cn(
-                  'rounded-lg p-1.5 text-slate-400 transition-colors',
-                  'hover:bg-slate-100 hover:text-slate-600',
+                  'rounded-lg p-1.5 text-slate-400 dark:text-slate-500 transition-colors',
+                  'hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500'
                 )}
                 aria-label="Close modal"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
             </div>
@@ -127,7 +112,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
 
           {/* Footer */}
           {footer && (
-            <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
+            <div className="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-700 px-6 py-4">
               {footer}
             </div>
           )}
@@ -139,7 +124,6 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
 
 Modal.displayName = 'Modal';
 
-// Convenience component for standard modal actions
 export const ModalActions = ({
   onCancel,
   onConfirm,

@@ -61,18 +61,18 @@ export const Button = forwardRef<HTMLButtonElement, Props>(
     ref
   ) => {
     const variantClasses = {
-      primary:
+       primary:
         'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md disabled:bg-blue-300',
       secondary:
-        'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 active:bg-slate-100 shadow-sm hover:shadow-md disabled:bg-slate-50 disabled:text-slate-400',
+        'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 active:bg-slate-100 shadow-sm hover:shadow-md disabled:bg-slate-50 disabled:text-slate-400',
       ghost:
-        'bg-transparent text-slate-700 hover:bg-slate-100 active:bg-slate-200 disabled:text-slate-400',
+        'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:bg-slate-200 dark:active:bg-slate-600 disabled:text-slate-400',
       danger:
         'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm hover:shadow-md disabled:bg-red-300',
       success:
         'bg-green-600 text-white hover:bg-green-700 active:bg-green-800 shadow-sm hover:shadow-md disabled:bg-green-300',
       outline:
-        'bg-transparent text-blue-600 border-2 border-blue-600 hover:bg-blue-50 active:bg-blue-100 disabled:border-blue-300 disabled:text-blue-300',
+        'bg-transparent text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:bg-blue-100 disabled:border-blue-300 disabled:text-blue-300',
     };
 
     const sizeClasses = {

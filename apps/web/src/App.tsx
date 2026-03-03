@@ -529,6 +529,7 @@ export default function App() {
               {route === 'branches'   && me.role === 'SUPER_ADMIN' && <BranchesPage user={me} />}
               {route === 'hospitals'  && <HospitalsPage />}
               {route === 'export'     && me.role === 'SUPER_ADMIN' && <ExportPage user={me} />}
+              {route === 'staff'      && me.role === 'SUPER_ADMIN' && <StaffPage />}
             </div>
           </main>
         </div>

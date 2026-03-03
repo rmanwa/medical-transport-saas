@@ -9,6 +9,7 @@ export type AuthUser = {
   companyId: string;
   canAccessAllBranches: boolean;
   branchIds: string[];
+  mustChangePassword: boolean;
 };
 
 export type Branch = {
@@ -177,6 +178,18 @@ export async function login(email: string, password: string): Promise<LoginRespo
 
 export async function getMe(): Promise<{ user: AuthUser }> {
   return apiGet<{ user: AuthUser }>('/me');
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ ok: true }> {
+  const res = await apiFetch('/auth/change-password', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  return (await res.json()) as any;
 }
 
 // ─── Branches ─────────────────────────────────────────────────────────────────

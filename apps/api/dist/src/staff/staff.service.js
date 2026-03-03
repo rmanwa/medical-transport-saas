@@ -125,6 +125,7 @@ let StaffService = class StaffService {
                     role: 'STAFF',
                     companyId,
                     canAccessAllBranches: false,
+                    mustChangePassword: true,
                 },
             });
             await tx.userBranch.createMany({

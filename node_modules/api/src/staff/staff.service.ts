@@ -108,6 +108,7 @@ export class StaffService {
           role: 'STAFF',
           companyId,
           canAccessAllBranches: false,
+          mustChangePassword: true, // ← force password change on first login
         },
       });
 

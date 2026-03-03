@@ -51,6 +51,7 @@ model User {
   company              Company   @relation(fields: [companyId], references: [id])
   branches             UserBranch[]
   canAccessAllBranches Boolean   @default(false)
+  mustChangePassword   Boolean   @default(false)
 }
 
 model UserBranch {

@@ -30,6 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       companyId: user.companyId,
       canAccessAllBranches: user.canAccessAllBranches || user.role === 'SUPER_ADMIN',
       branchIds,
+      mustChangePassword: user.mustChangePassword,
     };
   }
 }

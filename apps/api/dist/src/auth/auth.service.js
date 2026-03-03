@@ -63,13 +63,9 @@ let AuthService = class AuthService {
             where: { email: normalizedEmail },
             include: { branches: true },
         });
-        console.log('User found:', user?.email);
-        console.log('Stored hash:', user?.passwordHash);
-        console.log('Password to compare:', rawPassword);
         if (!user)
             return null;
         const ok = await bcrypt.compare(rawPassword, user.passwordHash);
-        console.log('Password match:', ok);
         if (!ok)
             return null;
         const accessToken = await this.jwt.signAsync({
@@ -79,10 +75,30 @@ let AuthService = class AuthService {
         });
         return { accessToken };
     }
+    async changePassword(userId, currentPassword, newPassword) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+        if (!user)
+            return false;
+        const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!ok)
+            return false;
+        const newHash = await bcrypt.hash(newPassword, 10);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                passwordHash: newHash,
+                mustChangePassword: false,
+            },
+        });
+        return true;
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, jwt_1.JwtService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        jwt_1.JwtService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

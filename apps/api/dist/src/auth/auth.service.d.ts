@@ -7,4 +7,5 @@ export declare class AuthService {
     login(email: string, password: string): Promise<{
         accessToken: string;
     } | null>;
+    changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean>;
 }

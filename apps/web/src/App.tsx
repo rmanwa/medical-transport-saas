@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clearToken, getMe, getSetupStatus } from './api';
 import type { AuthUser } from './api';
-
+import { ChangePasswordPage } from './pages/ChangePasswordPage';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ClientsPage } from './pages/ClientsPage';
@@ -342,10 +342,14 @@ export default function App() {
     setRoute('dashboard');
     setMobileMenuOpen(false);
   }
+
   if (needsSetup) {
   return <SetupWizardPage onComplete={bootstrap} />;
 }
 
+if (me?.mustChangePassword) {
+  return <ChangePasswordPage onComplete={bootstrap} onLogout={logout} />;
+}
   // ── Login screen ───────────────────────────────────────────────────────────
   if (!me) {
     return (

@@ -14,6 +14,7 @@ export declare class JwtStrategy extends JwtStrategy_base {
         companyId: string;
         canAccessAllBranches: boolean;
         branchIds: string[];
+        mustChangePassword: boolean;
     }>;
 }
 export {};

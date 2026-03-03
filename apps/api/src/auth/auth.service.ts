@@ -5,9 +5,15 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService, private readonly jwt: JwtService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwt: JwtService,
+  ) {}
 
-  async login(email: string, password: string): Promise<{ accessToken: string } | null> {
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ accessToken: string } | null> {
     const normalizedEmail = (email ?? '').trim().toLowerCase();
     const rawPassword = password ?? '';
 
@@ -18,15 +24,9 @@ export class AuthService {
       include: { branches: true },
     });
 
-    console.log('User found:', user?.email);
-    console.log('Stored hash:', user?.passwordHash);
-    console.log('Password to compare:', rawPassword);
-
     if (!user) return null;
 
     const ok = await bcrypt.compare(rawPassword, user.passwordHash);
-    console.log('Password match:', ok);
-
     if (!ok) return null;
 
     const accessToken = await this.jwt.signAsync({
@@ -36,5 +36,35 @@ export class AuthService {
     });
 
     return { accessToken };
+  }
+
+  /**
+   * Verify the current password, hash the new one, update the DB,
+   * and clear the mustChangePassword flag.
+   */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) return false;
+
+    const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!ok) return false;
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: newHash,
+        mustChangePassword: false,
+      },
+    });
+
+    return true;
   }
 }

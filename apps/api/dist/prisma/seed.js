@@ -88,7 +88,7 @@ async function main() {
     const manager = await prisma.user.create({
         data: {
             companyId: company.id,
-            email: 'manager@acmemedtransport.com',
+            email: 'robertmanwa@icloud.com',
             name: 'Manager',
             role: client_1.Role.SUPER_ADMIN,
             passwordHash,
@@ -97,7 +97,7 @@ async function main() {
     const staff = await prisma.user.create({
         data: {
             companyId: company.id,
-            email: 'staff@acmemedtransport.com',
+            email: 'robamanwa@gmail.com.com',
             name: 'Staff',
             role: client_1.Role.STAFF,
             passwordHash,

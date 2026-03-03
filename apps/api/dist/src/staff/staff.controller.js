@@ -41,17 +41,17 @@ let StaffController = class StaffController {
     async invite(req, dto) {
         const user = req.user;
         requireAdmin(user);
-        return this.staff.invite(user.companyId, dto);
+        return this.staff.invite(user.companyId, dto, user.id);
     }
     async update(req, id, dto) {
         const user = req.user;
         requireAdmin(user);
-        return this.staff.update(user.companyId, id, dto);
+        return this.staff.update(user.companyId, id, dto, user.id);
     }
     async updateBranches(req, id, dto) {
         const user = req.user;
         requireAdmin(user);
-        return this.staff.updateBranches(user.companyId, id, dto);
+        return this.staff.updateBranches(user.companyId, id, dto, user.id);
     }
     async remove(req, id) {
         const user = req.user;
@@ -59,7 +59,7 @@ let StaffController = class StaffController {
         if (user.id === id) {
             throw new common_1.ForbiddenException('You cannot delete your own account');
         }
-        return this.staff.remove(user.companyId, id);
+        return this.staff.remove(user.companyId, id, user.id);
     }
 };
 exports.StaffController = StaffController;

@@ -6,13 +6,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
+import { EmailService } from '../email/email.service';
 import { InviteStaffDto } from './dto/invite-staff.dto';
 import { UpdateStaffBranchesDto } from './dto/update-staff-branches.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
 
 @Injectable()
 export class StaffService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,   // ← NEW
+    private readonly emailService: EmailService,    // ← NEW
+  ) {}
 
   // ─── List all staff in the company ────────────────────────────────────
 
@@ -63,7 +69,7 @@ export class StaffService {
 
   // ─── Invite (create) a new staff member ───────────────────────────────
 
-  async invite(companyId: string, dto: InviteStaffDto) {
+  async invite(companyId: string, dto: InviteStaffDto, adminUserId: string) {  // ← adminUserId added
     const name = (dto.name ?? '').trim();
     const email = (dto.email ?? '').trim().toLowerCase();
     const password = dto.password ?? '';
@@ -122,6 +128,32 @@ export class StaffService {
       return newUser;
     });
 
+    // ── Audit log ──
+    await this.auditService.log({
+      action: 'STAFF_INVITED',
+      entityId: user.id,
+      entityType: 'User',
+      details: { staffName: name, staffEmail: email, branchIds },
+      userId: adminUserId,
+      companyId,
+    });
+
+    // ── Email temp password to the new staff member ──
+    try {
+      const company = await this.prisma.company.findUnique({
+        where: { id: companyId },
+        select: { name: true },
+      });
+      await this.emailService.sendStaffInvite(
+        email,
+        name,
+        password,                       // plain-text temp password (before hashing)
+        company?.name ?? 'Clinic',
+      );
+    } catch {
+      // Don't fail the invite if email send fails
+    }
+
     return {
       id: user.id,
       email: user.email,
@@ -133,7 +165,7 @@ export class StaffService {
 
   // ─── Update staff profile (name, email) ───────────────────────────────
 
-  async update(companyId: string, staffId: string, dto: UpdateStaffDto) {
+  async update(companyId: string, staffId: string, dto: UpdateStaffDto, adminUserId: string) {  // ← adminUserId added
     const existing = await this.prisma.user.findFirst({
       where: { id: staffId, companyId },
     });
@@ -165,6 +197,19 @@ export class StaffService {
       data,
     });
 
+    // ── Audit log ──
+    await this.auditService.log({
+      action: 'STAFF_UPDATED',
+      entityId: staffId,
+      entityType: 'User',
+      details: {
+        staffName: updated.name,
+        updatedFields: Object.keys(data),
+      },
+      userId: adminUserId,
+      companyId,
+    });
+
     return {
       id: updated.id,
       email: updated.email,
@@ -179,6 +224,7 @@ export class StaffService {
     companyId: string,
     staffId: string,
     dto: UpdateStaffBranchesDto,
+    adminUserId: string,  // ← added
   ) {
     const branchIds = dto.branchIds ?? [];
 
@@ -219,12 +265,26 @@ export class StaffService {
       });
     });
 
+    // ── Audit log ──
+    await this.auditService.log({
+      action: 'STAFF_UPDATED',
+      entityId: staffId,
+      entityType: 'User',
+      details: {
+        staffName: user.name,
+        action: 'branches_reassigned',
+        branchIds,
+      },
+      userId: adminUserId,
+      companyId,
+    });
+
     return { ok: true, branchIds };
   }
 
   // ─── Remove a staff member ────────────────────────────────────────────
 
-  async remove(companyId: string, staffId: string) {
+  async remove(companyId: string, staffId: string, adminUserId: string) {  // ← adminUserId added
     const user = await this.prisma.user.findFirst({
       where: { id: staffId, companyId },
     });
@@ -246,6 +306,16 @@ export class StaffService {
     await this.prisma.$transaction(async (tx) => {
       await tx.userBranch.deleteMany({ where: { userId: staffId } });
       await tx.user.delete({ where: { id: staffId } });
+    });
+
+    // ── Audit log ──
+    await this.auditService.log({
+      action: 'STAFF_DELETED',
+      entityId: staffId,
+      entityType: 'User',
+      details: { staffName: user.name, staffEmail: user.email },
+      userId: adminUserId,
+      companyId,
     });
 
     return { ok: true };

@@ -12,8 +12,8 @@ export declare class StaffController {
         role: import("@prisma/client").$Enums.Role;
         canAccessAllBranches: boolean;
         branches: {
-            id: string;
             name: string;
+            id: string;
         }[];
     }[]>;
     getOne(req: any, id: string): Promise<{
@@ -23,8 +23,8 @@ export declare class StaffController {
         role: import("@prisma/client").$Enums.Role;
         canAccessAllBranches: boolean;
         branches: {
-            id: string;
             name: string;
+            id: string;
         }[];
     }>;
     invite(req: any, dto: InviteStaffDto): Promise<{

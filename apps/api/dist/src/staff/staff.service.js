@@ -46,10 +46,16 @@ exports.StaffService = void 0;
 const bcrypt = __importStar(require("bcryptjs"));
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const audit_service_1 = require("../audit/audit.service");
+const email_service_1 = require("../email/email.service");
 let StaffService = class StaffService {
     prisma;
-    constructor(prisma) {
+    auditService;
+    emailService;
+    constructor(prisma, auditService, emailService) {
         this.prisma = prisma;
+        this.auditService = auditService;
+        this.emailService = emailService;
     }
     async list(companyId) {
         const users = await this.prisma.user.findMany({
@@ -90,7 +96,7 @@ let StaffService = class StaffService {
             branches: user.branches.map((ub) => ub.branch),
         };
     }
-    async invite(companyId, dto) {
+    async invite(companyId, dto, adminUserId) {
         const name = (dto.name ?? '').trim();
         const email = (dto.email ?? '').trim().toLowerCase();
         const password = dto.password ?? '';
@@ -136,6 +142,23 @@ let StaffService = class StaffService {
             });
             return newUser;
         });
+        await this.auditService.log({
+            action: 'STAFF_INVITED',
+            entityId: user.id,
+            entityType: 'User',
+            details: { staffName: name, staffEmail: email, branchIds },
+            userId: adminUserId,
+            companyId,
+        });
+        try {
+            const company = await this.prisma.company.findUnique({
+                where: { id: companyId },
+                select: { name: true },
+            });
+            await this.emailService.sendStaffInvite(email, name, password, company?.name ?? 'Clinic');
+        }
+        catch {
+        }
         return {
             id: user.id,
             email: user.email,
@@ -144,7 +167,7 @@ let StaffService = class StaffService {
             branchIds,
         };
     }
-    async update(companyId, staffId, dto) {
+    async update(companyId, staffId, dto, adminUserId) {
         const existing = await this.prisma.user.findFirst({
             where: { id: staffId, companyId },
         });
@@ -172,6 +195,17 @@ let StaffService = class StaffService {
             where: { id: staffId },
             data,
         });
+        await this.auditService.log({
+            action: 'STAFF_UPDATED',
+            entityId: staffId,
+            entityType: 'User',
+            details: {
+                staffName: updated.name,
+                updatedFields: Object.keys(data),
+            },
+            userId: adminUserId,
+            companyId,
+        });
         return {
             id: updated.id,
             email: updated.email,
@@ -179,7 +213,7 @@ let StaffService = class StaffService {
             role: updated.role,
         };
     }
-    async updateBranches(companyId, staffId, dto) {
+    async updateBranches(companyId, staffId, dto, adminUserId) {
         const branchIds = dto.branchIds ?? [];
         const user = await this.prisma.user.findFirst({
             where: { id: staffId, companyId },
@@ -207,9 +241,21 @@ let StaffService = class StaffService {
                 })),
             });
         });
+        await this.auditService.log({
+            action: 'STAFF_UPDATED',
+            entityId: staffId,
+            entityType: 'User',
+            details: {
+                staffName: user.name,
+                action: 'branches_reassigned',
+                branchIds,
+            },
+            userId: adminUserId,
+            companyId,
+        });
         return { ok: true, branchIds };
     }
-    async remove(companyId, staffId) {
+    async remove(companyId, staffId, adminUserId) {
         const user = await this.prisma.user.findFirst({
             where: { id: staffId, companyId },
         });
@@ -227,12 +273,22 @@ let StaffService = class StaffService {
             await tx.userBranch.deleteMany({ where: { userId: staffId } });
             await tx.user.delete({ where: { id: staffId } });
         });
+        await this.auditService.log({
+            action: 'STAFF_DELETED',
+            entityId: staffId,
+            entityType: 'User',
+            details: { staffName: user.name, staffEmail: user.email },
+            userId: adminUserId,
+            companyId,
+        });
         return { ok: true };
     }
 };
 exports.StaffService = StaffService;
 exports.StaffService = StaffService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        audit_service_1.AuditService,
+        email_service_1.EmailService])
 ], StaffService);
 //# sourceMappingURL=staff.service.js.map

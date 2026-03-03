@@ -94,6 +94,7 @@ export declare class DashboardController {
         } | null;
         patient: {
             id: string;
+            email: string | null;
             branchId: string;
             firstName: string;
             lastName: string;
@@ -104,12 +105,12 @@ export declare class DashboardController {
         id: string;
         branchId: string;
         hospitalId: string | null;
+        patientId: string;
+        priority: import("@prisma/client").$Enums.Priority;
         startTime: Date;
         endTime: Date;
         notes: string | null;
         type: import("@prisma/client").$Enums.MeetingType;
-        priority: import("@prisma/client").$Enums.Priority;
-        patientId: string;
     })[]>;
     urgentQueue(req: RequestWithUser, branchId?: string): Promise<({
         branch: {
@@ -124,6 +125,7 @@ export declare class DashboardController {
         } | null;
         patient: {
             id: string;
+            email: string | null;
             branchId: string;
             firstName: string;
             lastName: string;
@@ -134,12 +136,12 @@ export declare class DashboardController {
         id: string;
         branchId: string;
         hospitalId: string | null;
+        patientId: string;
+        priority: import("@prisma/client").$Enums.Priority;
         startTime: Date;
         endTime: Date;
         notes: string | null;
         type: import("@prisma/client").$Enums.MeetingType;
-        priority: import("@prisma/client").$Enums.Priority;
-        patientId: string;
     })[]>;
     topHospitals(req: RequestWithUser, branchId?: string): Promise<{
         hospital: {
@@ -162,6 +164,7 @@ export declare class DashboardController {
         } | null;
         patient: {
             id: string;
+            email: string | null;
             branchId: string;
             firstName: string;
             lastName: string;
@@ -172,11 +175,11 @@ export declare class DashboardController {
         id: string;
         branchId: string;
         hospitalId: string | null;
+        patientId: string;
+        priority: import("@prisma/client").$Enums.Priority;
         startTime: Date;
         endTime: Date;
         notes: string | null;
         type: import("@prisma/client").$Enums.MeetingType;
-        priority: import("@prisma/client").$Enums.Priority;
-        patientId: string;
     })[]>;
 }

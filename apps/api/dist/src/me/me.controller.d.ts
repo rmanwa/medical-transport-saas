@@ -11,6 +11,7 @@ export declare class MeController {
             role: import("@prisma/client").$Enums.Role;
             companyId: string;
             canAccessAllBranches: boolean;
+            mustChangePassword: boolean;
             branchIds: string[];
         };
     }>;

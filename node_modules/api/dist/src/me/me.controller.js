@@ -32,6 +32,7 @@ let MeController = class MeController {
                 role: true,
                 companyId: true,
                 canAccessAllBranches: true,
+                mustChangePassword: true,
                 branches: {
                     select: { branchId: true },
                 },
@@ -45,6 +46,7 @@ let MeController = class MeController {
                 role: user.role,
                 companyId: user.companyId,
                 canAccessAllBranches: user.canAccessAllBranches,
+                mustChangePassword: user.mustChangePassword,
                 branchIds: user.branches.map((ub) => ub.branchId),
             },
         };

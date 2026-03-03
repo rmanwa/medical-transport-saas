@@ -22,6 +22,7 @@ export class MeController {
         role: true,
         companyId: true,
         canAccessAllBranches: true,
+        mustChangePassword: true,
         // 'branches' is the relation name on User in your Prisma schema.
         // Each Branch record has an 'id' field we use as branchId.
         branches: {
@@ -38,6 +39,7 @@ export class MeController {
         role: user.role,
         companyId: user.companyId,
         canAccessAllBranches: user.canAccessAllBranches,
+        mustChangePassword: user.mustChangePassword,
         branchIds: user.branches.map((ub) => ub.branchId),
       },
     };

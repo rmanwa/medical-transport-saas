@@ -7,20 +7,20 @@ export declare class HospitalsService {
     list(companyId: string): Promise<{
         id: string;
         name: string;
-        address: string;
         companyId: string;
+        address: string;
     }[]>;
     create(companyId: string, dto: CreateHospitalDto): Promise<{
         id: string;
         name: string;
-        address: string;
         companyId: string;
+        address: string;
     }>;
     update(companyId: string, hospitalId: string, dto: UpdateHospitalDto): Promise<{
         id: string;
         name: string;
-        address: string;
         companyId: string;
+        address: string;
     }>;
     remove(companyId: string, hospitalId: string): Promise<{
         ok: boolean;

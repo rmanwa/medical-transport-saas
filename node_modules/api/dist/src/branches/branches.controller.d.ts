@@ -6,7 +6,7 @@ export declare class BranchesController {
     list(req: RequestWithUser): Promise<{
         id: string;
         name: string;
-        address: string;
         companyId: string;
+        address: string;
     }[]>;
 }

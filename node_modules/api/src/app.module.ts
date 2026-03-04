@@ -9,6 +9,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
 import { SetupModule } from './setup/setup.module';
 import { StaffModule } from './staff/staff.module';
+import { AuditModule } from './audit/audit.module';           // ← NEW
+import { EmailModule } from './email/email.module';           // ← NEW
+import { SchedulerModule } from './scheduler/scheduler.module'; // ← NEW
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { StaffModule } from './staff/staff.module';
     AuthModule,
     SetupModule,
     StaffModule,
+    AuditModule,        // ← NEW — @Global, exports AuditService
+    EmailModule,        // ← NEW — @Global, exports EmailService
+    SchedulerModule,    // ← NEW — cron jobs for daily/weekly emails
   ],
 })
 export class AppModule implements NestModule {

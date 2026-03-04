@@ -48,7 +48,7 @@ export class StaffController {
   async invite(@Req() req: any, @Body() dto: InviteStaffDto) {
     const user = req.user as ReqUser;
     requireAdmin(user);
-    return this.staff.invite(user.companyId, dto);
+    return this.staff.invite(user.companyId, dto, user.id);  // ← user.id added
   }
 
   /** Update staff profile info (name, email). */
@@ -60,7 +60,7 @@ export class StaffController {
   ) {
     const user = req.user as ReqUser;
     requireAdmin(user);
-    return this.staff.update(user.companyId, id, dto);
+    return this.staff.update(user.companyId, id, dto, user.id);  // ← user.id added
   }
 
   /** Replace a staff member's branch assignments. */
@@ -72,7 +72,7 @@ export class StaffController {
   ) {
     const user = req.user as ReqUser;
     requireAdmin(user);
-    return this.staff.updateBranches(user.companyId, id, dto);
+    return this.staff.updateBranches(user.companyId, id, dto, user.id);  // ← user.id added
   }
 
   /** Remove a staff member entirely. */
@@ -84,6 +84,6 @@ export class StaffController {
     if (user.id === id) {
       throw new ForbiddenException('You cannot delete your own account');
     }
-    return this.staff.remove(user.companyId, id);
+    return this.staff.remove(user.companyId, id, user.id);  // ← user.id added
   }
 }

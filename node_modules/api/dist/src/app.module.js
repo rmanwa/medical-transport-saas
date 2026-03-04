@@ -18,6 +18,9 @@ const dashboard_module_1 = require("./dashboard/dashboard.module");
 const auth_module_1 = require("./auth/auth.module");
 const setup_module_1 = require("./setup/setup.module");
 const staff_module_1 = require("./staff/staff.module");
+const audit_module_1 = require("./audit/audit.module");
+const email_module_1 = require("./email/email.module");
+const scheduler_module_1 = require("./scheduler/scheduler.module");
 let AppModule = class AppModule {
     configure(consumer) {
     }
@@ -36,6 +39,9 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             setup_module_1.SetupModule,
             staff_module_1.StaffModule,
+            audit_module_1.AuditModule,
+            email_module_1.EmailModule,
+            scheduler_module_1.SchedulerModule,
         ],
     })
 ], AppModule);

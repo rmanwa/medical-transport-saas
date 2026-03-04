@@ -11,7 +11,8 @@ import { BranchesPage } from './pages/BranchesPage';
 import { ExportPage } from './pages/ExportPage';
 import { SetupWizardPage } from './pages/SetupWizardPage';
 import { StaffPage } from './pages/StaffPage';
-type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals' | 'branches' | 'export'| 'staff';
+import { AuditLogPage } from './pages/AuditLogPage';  // ← NEW
+type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals' | 'branches' | 'export'| 'staff' | 'audit';  // ← audit added
 
 function cx(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -89,9 +90,15 @@ const Icons = {
       <path strokeLinecap="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
     </svg>
   ),
+  // ← NEW: Audit icon
+  Audit: (props: { className?: string }) => (
+    <svg viewBox="0 0 24 24" className={props.className} fill="none" stroke="currentColor" strokeWidth="2">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    </svg>
+  ),
 };
 
-// SUPER_ADMIN: Dashboard, Clients, Scheduler, Branches, Clinics, Export
+// SUPER_ADMIN: Dashboard, Clients, Scheduler, Branches, Clinics, Export, Staff, Audit Log
 // STAFF:       Dashboard, Clients, Scheduler, Clinics
 const ALL_NAV = [
   { key: 'dashboard' as const, label: 'Dashboard', icon: Icons.Home,     adminOnly: false },
@@ -101,6 +108,7 @@ const ALL_NAV = [
   { key: 'hospitals' as const, label: 'Clinics',   icon: Icons.Clinic,   adminOnly: false },
   { key: 'export'    as const, label: 'Export',    icon: Icons.Export,   adminOnly: true  },
   { key: 'staff'     as const, label: 'Staff',     icon: Icons.Staff,    adminOnly: true  },
+  { key: 'audit'     as const, label: 'Audit Log', icon: Icons.Audit,    adminOnly: true  },  // ← NEW
 ];
 
 function getNavForUser(user: AuthUser) {
@@ -293,6 +301,7 @@ export default function App() {
     const titles: Record<Route, string> = {
       dashboard: 'Dashboard', clients: 'Clients', scheduler: 'Appointment Scheduler',
       branches: 'Branches', hospitals: 'Clinics', export: 'Export Reports', staff: 'Staff Management',
+      audit: 'Audit Log',  // ← NEW
     };
     return titles[route] ?? 'Dashboard';
   }, [route]);
@@ -306,6 +315,7 @@ export default function App() {
       hospitals: 'Manage clinic destinations for appointments.',
       export: 'Download appointment and client data as CSV files.',
       staff: 'Invite team members and manage branch access.',
+      audit: 'Track all actions — who did what and when.',  // ← NEW
     };
     return subs[route] ?? '';
   }, [route]);
@@ -319,7 +329,7 @@ export default function App() {
 
       const res = await getMe();
       setMe(res.user);
-      if (res.user.role === 'STAFF' && (route === 'branches' || route === 'export' || route === 'staff')) {
+      if (res.user.role === 'STAFF' && (route === 'branches' || route === 'export' || route === 'staff' || route === 'audit')) {  // ← audit added
         setRoute('dashboard');
       }
     } catch (e: any) {
@@ -331,7 +341,7 @@ export default function App() {
   useEffect(() => { bootstrap(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (me?.role === 'STAFF' && (route === 'branches' || route === 'export' || route === 'staff')) {
+    if (me?.role === 'STAFF' && (route === 'branches' || route === 'export' || route === 'staff' || route === 'audit')) {  // ← audit added
       setRoute('dashboard');
     }
   }, [me, route]);
@@ -534,6 +544,7 @@ if (me?.mustChangePassword) {
               {route === 'hospitals'  && <HospitalsPage />}
               {route === 'export'     && me.role === 'SUPER_ADMIN' && <ExportPage user={me} />}
               {route === 'staff'      && me.role === 'SUPER_ADMIN' && <StaffPage />}
+              {route === 'audit'      && me.role === 'SUPER_ADMIN' && <AuditLogPage />}  {/* ← NEW */}
             </div>
           </main>
         </div>

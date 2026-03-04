@@ -25,6 +25,7 @@ export type Patient = {
   lastName: string;
   gender: string;
   dateOfBirth: string;
+  email?: string | null;  // ← NEW
   branchId: string;
 };
 
@@ -79,6 +80,34 @@ export type SetupPayload = {
   companyName: string;
   branchName: string;
   branchAddress: string;
+};
+
+// ─── Audit Trail Types ────────────────────────────────────────────────────── ← NEW
+
+export type AuditAction =
+  | 'APPOINTMENT_CREATED' | 'APPOINTMENT_UPDATED' | 'APPOINTMENT_DELETED'
+  | 'STAFF_INVITED'       | 'STAFF_UPDATED'       | 'STAFF_DELETED'
+  | 'CLIENT_CREATED'      | 'CLIENT_UPDATED'      | 'CLIENT_DELETED'
+  | 'BRANCH_CREATED'      | 'BRANCH_UPDATED'      | 'BRANCH_DELETED';
+
+export type AuditLogEntry = {
+  id: string;
+  action: AuditAction;
+  entityId: string;
+  entityType: string;
+  details: Record<string, any> | null;
+  userId: string;
+  user: { id: string; name: string; email: string };
+  companyId: string;
+  createdAt: string;
+};
+
+export type AuditLogResponse = {
+  items: AuditLogEntry[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 };
 
 // ─── Date Utilities ───────────────────────────────────────────────────────────
@@ -210,7 +239,7 @@ export async function getPatients(branchId: string): Promise<Patient[]> {
 
 export async function createPatient(
   branchId: string,
-  body: { firstName: string; lastName: string; gender: string; dateOfBirth: string },
+  body: { firstName: string; lastName: string; gender: string; dateOfBirth: string; email?: string },  // ← email added
 ) {
   return apiPost<Patient>(`/branches/${encodeURIComponent(branchId)}/patients`, body);
 }
@@ -218,7 +247,7 @@ export async function createPatient(
 export async function updatePatient(
   branchId: string,
   patientId: string,
-  body: { firstName?: string; lastName?: string; gender?: string; dateOfBirth?: string },
+  body: { firstName?: string; lastName?: string; gender?: string; dateOfBirth?: string; email?: string },  // ← email added
 ): Promise<Patient> {
   const res = await apiFetch(`/branches/${encodeURIComponent(branchId)}/patients/${encodeURIComponent(patientId)}`, {
     method: 'PATCH',
@@ -333,4 +362,24 @@ export async function createShift(
   },
 ) {
   return apiPost<ShiftRow>(`/branches/${encodeURIComponent(branchId)}/shifts`, body);
+}
+
+// ─── Audit Trail (SUPER_ADMIN only) ──────────────────────────────────────── ← NEW
+
+export async function getAuditLogs(params: {
+  action?: AuditAction;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}): Promise<AuditLogResponse> {
+  const qs = new URLSearchParams();
+  if (params.action) qs.set('action', params.action);
+  if (params.userId) qs.set('userId', params.userId);
+  if (params.startDate) qs.set('startDate', params.startDate);
+  if (params.endDate) qs.set('endDate', params.endDate);
+  if (params.page) qs.set('page', String(params.page));
+  if (params.limit) qs.set('limit', String(params.limit));
+  return apiGet<AuditLogResponse>(`/audit?${qs.toString()}`);
 }

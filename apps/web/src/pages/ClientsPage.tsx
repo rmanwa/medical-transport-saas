@@ -10,6 +10,7 @@ const RefreshIcon = () => (<svg className="h-4 w-4" fill="none" viewBox="0 0 24 
 const EditIcon = () => (<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>);
 const TrashIcon = () => (<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>);
 const WarnIcon = () => (<svg className="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>);
+const MailIcon = () => (<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>);
 
 const inputCls = "w-full h-11 px-4 text-sm rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition";
 const labelCls = "block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5";
@@ -60,19 +61,24 @@ export function ClientsPage({ user }: ClientsPageProps) {
   const [clients, setClients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Create form
   const [createOpen, setCreateOpen] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState('');
   const [dob, setDob] = useState('');
+  const [email, setEmail] = useState('');           // ← NEW
 
+  // Edit form
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState('');
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName] = useState('');
   const [editGender, setEditGender] = useState('');
   const [editDob, setEditDob] = useState('');
+  const [editEmail, setEditEmail] = useState('');   // ← NEW
 
+  // Delete
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState('');
   const [deleteName, setDeleteName] = useState('');
@@ -104,9 +110,15 @@ export function ClientsPage({ user }: ClientsPageProps) {
     if (!firstName.trim() || !lastName.trim() || !gender || !dob) { showToast('All fields are required', 'error'); return; }
     setLoading(true);
     try {
-      await createPatient(branchId, { firstName: firstName.trim(), lastName: lastName.trim(), gender, dateOfBirth: new Date(dob).toISOString() });
+      await createPatient(branchId, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        gender,
+        dateOfBirth: new Date(dob).toISOString(),
+        email: email.trim() || undefined,  // ← NEW: pass email
+      });
       showToast('Client created!', 'success');
-      setFirstName(''); setLastName(''); setGender(''); setDob('');
+      setFirstName(''); setLastName(''); setGender(''); setDob(''); setEmail('');
       setCreateOpen(false);
       await loadClients(branchId);
     } catch (e: any) { showToast(e?.message ?? 'Failed', 'error'); }
@@ -115,14 +127,22 @@ export function ClientsPage({ user }: ClientsPageProps) {
 
   function openEdit(p: Patient) {
     setEditId(p.id); setEditFirstName(p.firstName); setEditLastName(p.lastName);
-    setEditGender(p.gender); setEditDob(p.dateOfBirth.slice(0, 10)); setEditOpen(true);
+    setEditGender(p.gender); setEditDob(p.dateOfBirth.slice(0, 10));
+    setEditEmail(p.email ?? '');   // ← NEW
+    setEditOpen(true);
   }
 
   async function onSaveEdit() {
     if (!editFirstName.trim() || !editLastName.trim() || !editGender || !editDob) { showToast('All fields are required', 'error'); return; }
     setLoading(true);
     try {
-      await updatePatient(branchId, editId, { firstName: editFirstName.trim(), lastName: editLastName.trim(), gender: editGender, dateOfBirth: new Date(editDob).toISOString() });
+      await updatePatient(branchId, editId, {
+        firstName: editFirstName.trim(),
+        lastName: editLastName.trim(),
+        gender: editGender,
+        dateOfBirth: new Date(editDob).toISOString(),
+        email: editEmail.trim() || undefined,  // ← NEW
+      });
       showToast('Client updated!', 'success'); setEditOpen(false); await loadClients(branchId);
     } catch (e: any) { showToast(e?.message ?? 'Failed', 'error'); }
     finally { setLoading(false); }
@@ -234,6 +254,7 @@ export function ClientsPage({ user }: ClientsPageProps) {
                 <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/60">
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">#</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Client Name</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Email</th>  {/* ← NEW */}
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Date of Birth</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Branch</th>
                   {isSuperAdmin && <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Actions</th>}
@@ -250,6 +271,17 @@ export function ClientsPage({ user }: ClientsPageProps) {
                         </div>
                         <span className="font-semibold text-slate-900 dark:text-white">{p.firstName} {p.lastName}</span>
                       </div>
+                    </td>
+                    {/* ← NEW: Email column */}
+                    <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
+                      {p.email ? (
+                        <div className="flex items-center gap-1.5">
+                          <MailIcon />
+                          <span className="truncate max-w-[180px]">{p.email}</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-600">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3 text-slate-600 dark:text-slate-300">
                       <div className="flex items-center gap-1.5"><CalendarIcon />{toMMDDYYYY(p.dateOfBirth)}</div>
@@ -284,6 +316,11 @@ export function ClientsPage({ user }: ClientsPageProps) {
             <div><label className={labelCls}>First Name *</label><input className={inputCls} placeholder="e.g. John" value={firstName} onChange={(e) => setFirstName(e.target.value)} /></div>
             <div><label className={labelCls}>Last Name *</label><input className={inputCls} placeholder="e.g. Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} /></div>
           </div>
+          {/* ← NEW: Email field */}
+          <div>
+            <label className={labelCls}>Email <span className="text-slate-400 font-normal">(optional — used for appointment notifications)</span></label>
+            <input type="email" className={inputCls} placeholder="e.g. john.doe@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
           <div>
             <label className={labelCls}>Gender *</label>
             <select className={selectCls} value={gender} onChange={(e) => setGender(e.target.value)}>
@@ -297,6 +334,7 @@ export function ClientsPage({ user }: ClientsPageProps) {
           </div>
           <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3 text-sm text-blue-800 dark:text-blue-300">
             Client will be added to <strong>{selectedBranch?.name}</strong>.
+            {email.trim() && ' They will receive email notifications when appointments are scheduled.'}
           </div>
           <ModalActions onCancel={() => setCreateOpen(false)} onConfirm={onCreate} cancelLabel="Cancel" confirmLabel="Add Client" loading={loading} />
         </div>
@@ -308,6 +346,11 @@ export function ClientsPage({ user }: ClientsPageProps) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div><label className={labelCls}>First Name *</label><input className={inputCls} value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} /></div>
             <div><label className={labelCls}>Last Name *</label><input className={inputCls} value={editLastName} onChange={(e) => setEditLastName(e.target.value)} /></div>
+          </div>
+          {/* ← NEW: Email field */}
+          <div>
+            <label className={labelCls}>Email <span className="text-slate-400 font-normal">(optional)</span></label>
+            <input type="email" className={inputCls} placeholder="e.g. john.doe@email.com" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
           </div>
           <div>
             <label className={labelCls}>Gender *</label>

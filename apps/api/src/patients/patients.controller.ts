@@ -80,8 +80,8 @@ export class PatientsController {
       include: { branch: true },
     });
 
-    // ── Audit log ──
-    await this.auditService.log({
+    // ── Audit log (fire-and-forget) ──
+    this.auditService.log({
       action: 'CLIENT_CREATED',
       entityId: patient.id,
       entityType: 'Patient',
@@ -91,7 +91,7 @@ export class PatientsController {
       },
       userId: req.user.id,
       companyId: req.user.companyId,
-    });
+    }).catch(() => {});
 
     return patient;
   }
@@ -123,8 +123,8 @@ export class PatientsController {
       data: updateData,
     });
 
-    // ── Audit log ──
-    await this.auditService.log({
+    // ── Audit log (fire-and-forget) ──
+    this.auditService.log({
       action: 'CLIENT_UPDATED',
       entityId: patient.id,
       entityType: 'Patient',
@@ -134,7 +134,7 @@ export class PatientsController {
       },
       userId: req.user.id,
       companyId: req.user.companyId,
-    });
+    }).catch(() => {});
 
     return patient;
   }
@@ -154,8 +154,8 @@ export class PatientsController {
 
     await this.prisma.patient.delete({ where: { id: patientId } });
 
-    // ── Audit log ──
-    await this.auditService.log({
+    // ── Audit log (fire-and-forget) ──
+    this.auditService.log({
       action: 'CLIENT_DELETED',
       entityId: patientId,
       entityType: 'Patient',
@@ -164,7 +164,7 @@ export class PatientsController {
       },
       userId: req.user.id,
       companyId: req.user.companyId,
-    });
+    }).catch(() => {});
 
     return { ok: true };
   }

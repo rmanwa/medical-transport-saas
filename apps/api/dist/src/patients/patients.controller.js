@@ -52,7 +52,7 @@ let PatientsController = class PatientsController {
             },
             include: { branch: true },
         });
-        await this.auditService.log({
+        this.auditService.log({
             action: 'CLIENT_CREATED',
             entityId: patient.id,
             entityType: 'Patient',
@@ -62,7 +62,7 @@ let PatientsController = class PatientsController {
             },
             userId: req.user.id,
             companyId: req.user.companyId,
-        });
+        }).catch(() => { });
         return patient;
     }
     async updatePatient(branchId, patientId, body, req) {
@@ -87,7 +87,7 @@ let PatientsController = class PatientsController {
             where: { id: patientId },
             data: updateData,
         });
-        await this.auditService.log({
+        this.auditService.log({
             action: 'CLIENT_UPDATED',
             entityId: patient.id,
             entityType: 'Patient',
@@ -97,7 +97,7 @@ let PatientsController = class PatientsController {
             },
             userId: req.user.id,
             companyId: req.user.companyId,
-        });
+        }).catch(() => { });
         return patient;
     }
     async deletePatient(branchId, patientId, req) {
@@ -108,7 +108,7 @@ let PatientsController = class PatientsController {
         if (!patient)
             throw new common_1.BadRequestException('Patient not found in this branch.');
         await this.prisma.patient.delete({ where: { id: patientId } });
-        await this.auditService.log({
+        this.auditService.log({
             action: 'CLIENT_DELETED',
             entityId: patientId,
             entityType: 'Patient',
@@ -117,7 +117,7 @@ let PatientsController = class PatientsController {
             },
             userId: req.user.id,
             companyId: req.user.companyId,
-        });
+        }).catch(() => { });
         return { ok: true };
     }
 };

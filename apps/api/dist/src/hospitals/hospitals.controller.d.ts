@@ -7,20 +7,20 @@ export declare class HospitalsController {
     list(req: any): Promise<{
         id: string;
         name: string;
-        address: string;
         companyId: string;
+        address: string;
     }[]>;
     create(req: any, dto: CreateHospitalDto): Promise<{
         id: string;
         name: string;
-        address: string;
         companyId: string;
+        address: string;
     }>;
     update(req: any, id: string, dto: UpdateHospitalDto): Promise<{
         id: string;
         name: string;
-        address: string;
         companyId: string;
+        address: string;
     }>;
     remove(req: any, id: string): Promise<{
         ok: boolean;

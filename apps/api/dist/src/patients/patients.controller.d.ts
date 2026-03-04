@@ -21,12 +21,12 @@ export declare class PatientsController {
     constructor(prisma: PrismaService, auditService: AuditService);
     listPatients(branchId: string, req: RequestWithUser): Promise<{
         id: string;
-        email: string | null;
-        branchId: string;
         firstName: string;
         lastName: string;
         gender: string;
         dateOfBirth: Date;
+        email: string | null;
+        branchId: string;
     }[]>;
     createPatient(branchId: string, body: CreatePatientBody, req: RequestWithUser): Promise<{
         branch: {
@@ -37,21 +37,21 @@ export declare class PatientsController {
         };
     } & {
         id: string;
-        email: string | null;
-        branchId: string;
         firstName: string;
         lastName: string;
         gender: string;
         dateOfBirth: Date;
+        email: string | null;
+        branchId: string;
     }>;
     updatePatient(branchId: string, patientId: string, body: UpdatePatientBody, req: RequestWithUser): Promise<{
         id: string;
-        email: string | null;
-        branchId: string;
         firstName: string;
         lastName: string;
         gender: string;
         dateOfBirth: Date;
+        email: string | null;
+        branchId: string;
     }>;
     deletePatient(branchId: string, patientId: string, req: RequestWithUser): Promise<{
         ok: boolean;

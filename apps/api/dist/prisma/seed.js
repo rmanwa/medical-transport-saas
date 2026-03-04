@@ -37,8 +37,8 @@ const client_1 = require("@prisma/client");
 const bcrypt = __importStar(require("bcrypt"));
 const prisma = new client_1.PrismaClient();
 async function main() {
-    const passwordPlain = 'Password123!';
-    const passwordHash = await bcrypt.hash(passwordPlain, 10);
+    console.log('🌱 Seeding database...\n');
+    await prisma.auditLog.deleteMany();
     await prisma.shift.deleteMany();
     await prisma.patient.deleteMany();
     await prisma.userBranch.deleteMany();
@@ -46,83 +46,250 @@ async function main() {
     await prisma.user.deleteMany();
     await prisma.branch.deleteMany();
     await prisma.company.deleteMany();
+    console.log('🧹 Cleaned existing data\n');
     const company = await prisma.company.create({
-        data: { name: 'Acme Medical Transport' },
+        data: { name: 'Arizona Medical Transport' },
     });
-    const branchesData = [
-        { name: 'North', address: '100 North Ave, Chicago, IL 60601' },
-        { name: 'South', address: '200 South Ave, Chicago, IL 60602' },
-        { name: 'East', address: '300 East Ave, Chicago, IL 60603' },
-        { name: 'West', address: '400 West Ave, Chicago, IL 60604' },
-        { name: 'Central', address: '500 Central Ave, Chicago, IL 60605' },
-    ];
-    const branches = await Promise.all(branchesData.map((b) => prisma.branch.create({
+    console.log('✅ Company created:', company.name);
+    const adminPassword = await bcrypt.hash('Admin@2026', 10);
+    const admin = await prisma.user.create({
         data: {
-            ...b,
+            email: 'robertmanwa@icloud.com',
+            passwordHash: adminPassword,
+            name: 'Robert Admin',
+            role: client_1.Role.SUPER_ADMIN,
+            companyId: company.id,
+            canAccessAllBranches: true,
+            mustChangePassword: false,
+        },
+    });
+    console.log('✅ Admin created:', admin.email, '/ password: Admin@2026');
+    const phoenixBranch = await prisma.branch.create({
+        data: {
+            name: 'Phoenix Main',
+            address: '4502 N Central Ave, Phoenix, AZ 85012',
             companyId: company.id,
         },
-    })));
-    const hospitals = await Promise.all([
+    });
+    const tucsonBranch = await prisma.branch.create({
+        data: {
+            name: 'Tucson South',
+            address: '1920 E Speedway Blvd, Tucson, AZ 85719',
+            companyId: company.id,
+        },
+    });
+    const mesaBranch = await prisma.branch.create({
+        data: {
+            name: 'Mesa East',
+            address: '655 E Southern Ave, Mesa, AZ 85204',
+            companyId: company.id,
+        },
+    });
+    console.log('✅ Branches created: Phoenix Main, Tucson South, Mesa East');
+    await prisma.userBranch.createMany({
+        data: [
+            { userId: admin.id, branchId: phoenixBranch.id },
+            { userId: admin.id, branchId: tucsonBranch.id },
+            { userId: admin.id, branchId: mesaBranch.id },
+        ],
+    });
+    const staffPassword = await bcrypt.hash('Staff@2026', 10);
+    const sarah = await prisma.user.create({
+        data: {
+            email: 'robamanwa@gmail.com',
+            passwordHash: staffPassword,
+            name: 'Sarah Johnson',
+            role: client_1.Role.STAFF,
+            companyId: company.id,
+            canAccessAllBranches: false,
+            mustChangePassword: true,
+        },
+    });
+    const james = await prisma.user.create({
+        data: {
+            email: 'james@arizonamedtransport.com',
+            passwordHash: staffPassword,
+            name: 'James Williams',
+            role: client_1.Role.STAFF,
+            companyId: company.id,
+            canAccessAllBranches: false,
+            mustChangePassword: true,
+        },
+    });
+    const maria = await prisma.user.create({
+        data: {
+            email: 'maria@arizonamedtransport.com',
+            passwordHash: staffPassword,
+            name: 'Maria Garcia',
+            role: client_1.Role.STAFF,
+            companyId: company.id,
+            canAccessAllBranches: false,
+            mustChangePassword: true,
+        },
+    });
+    console.log('✅ Staff created: Sarah, James, Maria / password: Staff@2026');
+    await prisma.userBranch.createMany({
+        data: [
+            { userId: sarah.id, branchId: phoenixBranch.id },
+            { userId: james.id, branchId: tucsonBranch.id },
+            { userId: maria.id, branchId: phoenixBranch.id },
+            { userId: maria.id, branchId: mesaBranch.id },
+        ],
+    });
+    console.log('✅ Staff assigned to branches');
+    const [stJosephs, bannerUMC, mercyGilbert] = await Promise.all([
         prisma.hospital.create({
             data: {
+                name: "St. Joseph's Hospital",
+                address: '350 W Thomas Rd, Phoenix, AZ 85013',
                 companyId: company.id,
-                name: 'Downtown Imaging & Specialty',
-                address: '77 W Monroe St, Chicago, IL 60603',
             },
         }),
         prisma.hospital.create({
             data: {
+                name: 'Banner UMC Tucson',
+                address: '1501 N Campbell Ave, Tucson, AZ 85724',
                 companyId: company.id,
-                name: 'Lakeside Clinic',
-                address: '2100 N Lake Shore Dr, Chicago, IL 60614',
             },
         }),
         prisma.hospital.create({
             data: {
+                name: 'Mercy Gilbert Medical Center',
+                address: '3555 S Val Vista Dr, Gilbert, AZ 85297',
                 companyId: company.id,
-                name: 'Southside Rehabilitation Center',
-                address: '6100 S Cottage Grove Ave, Chicago, IL 60637',
             },
         }),
     ]);
-    const manager = await prisma.user.create({
+    console.log("✅ Hospitals created: St. Joseph's, Banner UMC, Mercy Gilbert");
+    const helen = await prisma.patient.create({
         data: {
-            companyId: company.id,
-            email: 'robertmanwa@icloud.com',
-            name: 'Manager',
-            role: client_1.Role.SUPER_ADMIN,
-            passwordHash,
+            firstName: 'Helen',
+            lastName: 'Martinez',
+            gender: 'Female',
+            dateOfBirth: new Date('1948-03-15'),
+            email: 'ezraoburuu@gmail.com',
+            branchId: phoenixBranch.id,
         },
     });
-    const staff = await prisma.user.create({
+    const william = await prisma.patient.create({
         data: {
-            companyId: company.id,
-            email: 'robamanwa@gmail.com.com',
-            name: 'Staff',
-            role: client_1.Role.STAFF,
-            passwordHash,
+            firstName: 'William',
+            lastName: 'Thompson',
+            gender: 'Male',
+            dateOfBirth: new Date('1955-07-22'),
+            email: 'william.t@email.com',
+            branchId: phoenixBranch.id,
         },
     });
-    const staffBranchIds = [branches.find((b) => b.name === 'Central').id, branches.find((b) => b.name === 'North').id];
-    await prisma.userBranch.createMany({
-        data: staffBranchIds.map((branchId) => ({
-            userId: staff.id,
-            branchId,
-        })),
+    const dorothy = await prisma.patient.create({
+        data: {
+            firstName: 'Dorothy',
+            lastName: 'Chen',
+            gender: 'Female',
+            dateOfBirth: new Date('1940-11-08'),
+            branchId: tucsonBranch.id,
+        },
     });
-    await prisma.userBranch.createMany({
-        data: branches.map((b) => ({
-            userId: manager.id,
-            branchId: b.id,
-        })),
+    const richard = await prisma.patient.create({
+        data: {
+            firstName: 'Richard',
+            lastName: 'Okafor',
+            gender: 'Male',
+            dateOfBirth: new Date('1962-01-30'),
+            email: 'r.okafor@email.com',
+            branchId: mesaBranch.id,
+        },
     });
-    console.log('Seed complete.');
-    console.log('Login credentials:');
-    console.log('  manager@acmemedtransport.com / Password123!');
-    console.log('  staff@acmemedtransport.com / Password123!');
-    console.log('Company:', company.id);
-    console.log('Branches:', branches.map((b) => ({ id: b.id, name: b.name })));
-    console.log('Hospitals:', hospitals.map((h) => ({ id: h.id, name: h.name })));
+    const margaret = await prisma.patient.create({
+        data: {
+            firstName: 'Margaret',
+            lastName: 'Wilson',
+            gender: 'Female',
+            dateOfBirth: new Date('1951-09-12'),
+            branchId: phoenixBranch.id,
+        },
+    });
+    console.log('✅ Patients created: Helen, William, Dorothy, Richard, Margaret');
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    function makeTime(base, hour, minute = 0) {
+        const d = new Date(base);
+        d.setHours(hour, minute, 0, 0);
+        return d;
+    }
+    await prisma.shift.createMany({
+        data: [
+            {
+                patientId: helen.id,
+                branchId: phoenixBranch.id,
+                hospitalId: stJosephs.id,
+                startTime: makeTime(tomorrow, 9, 0),
+                endTime: makeTime(tomorrow, 10, 30),
+                type: client_1.MeetingType.PHYSICAL,
+                priority: client_1.Priority.NORMAL,
+                notes: 'Routine cardiology checkup',
+            },
+            {
+                patientId: william.id,
+                branchId: phoenixBranch.id,
+                hospitalId: stJosephs.id,
+                startTime: makeTime(tomorrow, 11, 0),
+                endTime: makeTime(tomorrow, 12, 0),
+                type: client_1.MeetingType.PHYSICAL,
+                priority: client_1.Priority.URGENT,
+                notes: 'Post-surgery follow-up — needs wheelchair transport',
+            },
+            {
+                patientId: dorothy.id,
+                branchId: tucsonBranch.id,
+                hospitalId: bannerUMC.id,
+                startTime: makeTime(tomorrow, 14, 0),
+                endTime: makeTime(tomorrow, 15, 30),
+                type: client_1.MeetingType.PHYSICAL,
+                priority: client_1.Priority.NORMAL,
+                notes: 'Dialysis session',
+            },
+            {
+                patientId: richard.id,
+                branchId: mesaBranch.id,
+                hospitalId: mercyGilbert.id,
+                startTime: makeTime(nextWeek, 10, 0),
+                endTime: makeTime(nextWeek, 11, 0),
+                type: client_1.MeetingType.PHYSICAL,
+                priority: client_1.Priority.NORMAL,
+                notes: 'Orthopedic consultation',
+            },
+            {
+                patientId: margaret.id,
+                branchId: phoenixBranch.id,
+                startTime: makeTime(nextWeek, 13, 0),
+                endTime: makeTime(nextWeek, 13, 30),
+                type: client_1.MeetingType.VIRTUAL,
+                priority: client_1.Priority.NORMAL,
+                notes: 'Telehealth follow-up with primary care',
+            },
+        ],
+    });
+    console.log('✅ Sample appointments created\n');
+    console.log('═══════════════════════════════════════════');
+    console.log('  🏥 Seed Complete!');
+    console.log('═══════════════════════════════════════════');
+    console.log('');
+    console.log('  Admin Login:');
+    console.log('    Email:    robertmanwa@icloud.com');
+    console.log('    Password: Admin@2026');
+    console.log('');
+    console.log('  Staff Login (any):');
+    console.log('    robamanwa@gmail.com');
+    console.log('    james@arizonamedtransport.com');
+    console.log('    maria@arizonamedtransport.com');
+    console.log('    Password: Staff@2026');
+    console.log('');
+    console.log('  3 Branches · 3 Hospitals · 5 Patients · 5 Appointments');
+    console.log('═══════════════════════════════════════════\n');
 }
 main()
     .catch((e) => {

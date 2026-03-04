@@ -142,23 +142,20 @@ let StaffService = class StaffService {
             });
             return newUser;
         });
-        await this.auditService.log({
+        this.auditService.log({
             action: 'STAFF_INVITED',
             entityId: user.id,
             entityType: 'User',
             details: { staffName: name, staffEmail: email, branchIds },
             userId: adminUserId,
             companyId,
-        });
-        try {
-            const company = await this.prisma.company.findUnique({
-                where: { id: companyId },
-                select: { name: true },
-            });
-            await this.emailService.sendStaffInvite(email, name, password, company?.name ?? 'Clinic');
-        }
-        catch {
-        }
+        }).catch(() => { });
+        this.prisma.company.findUnique({
+            where: { id: companyId },
+            select: { name: true },
+        }).then((company) => {
+            this.emailService.sendStaffInvite(email, name, password, company?.name ?? 'Clinic').catch(() => { });
+        }).catch(() => { });
         return {
             id: user.id,
             email: user.email,
@@ -195,7 +192,7 @@ let StaffService = class StaffService {
             where: { id: staffId },
             data,
         });
-        await this.auditService.log({
+        this.auditService.log({
             action: 'STAFF_UPDATED',
             entityId: staffId,
             entityType: 'User',
@@ -205,7 +202,7 @@ let StaffService = class StaffService {
             },
             userId: adminUserId,
             companyId,
-        });
+        }).catch(() => { });
         return {
             id: updated.id,
             email: updated.email,
@@ -241,7 +238,7 @@ let StaffService = class StaffService {
                 })),
             });
         });
-        await this.auditService.log({
+        this.auditService.log({
             action: 'STAFF_UPDATED',
             entityId: staffId,
             entityType: 'User',
@@ -252,7 +249,7 @@ let StaffService = class StaffService {
             },
             userId: adminUserId,
             companyId,
-        });
+        }).catch(() => { });
         return { ok: true, branchIds };
     }
     async remove(companyId, staffId, adminUserId) {
@@ -273,14 +270,14 @@ let StaffService = class StaffService {
             await tx.userBranch.deleteMany({ where: { userId: staffId } });
             await tx.user.delete({ where: { id: staffId } });
         });
-        await this.auditService.log({
+        this.auditService.log({
             action: 'STAFF_DELETED',
             entityId: staffId,
             entityType: 'User',
             details: { staffName: user.name, staffEmail: user.email },
             userId: adminUserId,
             companyId,
-        });
+        }).catch(() => { });
         return { ok: true };
     }
 };

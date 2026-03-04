@@ -91,17 +91,17 @@ export declare class DashboardService {
         hospital: {
             id: string;
             name: string;
-            address: string;
             companyId: string;
+            address: string;
         } | null;
         patient: {
             id: string;
             email: string | null;
-            branchId: string;
             firstName: string;
             lastName: string;
             gender: string;
             dateOfBirth: Date;
+            branchId: string;
         };
     } & {
         id: string;
@@ -122,17 +122,17 @@ export declare class DashboardService {
         hospital: {
             id: string;
             name: string;
-            address: string;
             companyId: string;
+            address: string;
         } | null;
         patient: {
             id: string;
             email: string | null;
-            branchId: string;
             firstName: string;
             lastName: string;
             gender: string;
             dateOfBirth: Date;
+            branchId: string;
         };
     } & {
         id: string;
@@ -153,17 +153,17 @@ export declare class DashboardService {
         hospital: {
             id: string;
             name: string;
-            address: string;
             companyId: string;
+            address: string;
         } | null;
         patient: {
             id: string;
             email: string | null;
-            branchId: string;
             firstName: string;
             lastName: string;
             gender: string;
             dateOfBirth: Date;
+            branchId: string;
         };
     } & {
         id: string;

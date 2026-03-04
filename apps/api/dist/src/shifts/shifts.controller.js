@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShiftsController = void 0;
 const common_1 = require("@nestjs/common");
@@ -73,12 +72,13 @@ let ShiftsController = class ShiftsController {
             },
             include: { branch: true },
         });
-        await this.auditService.log({
+        const patientName = `${patient.firstName} ${patient.lastName}`;
+        this.auditService.log({
             action: 'APPOINTMENT_CREATED',
             entityId: shift.id,
             entityType: 'Shift',
             details: {
-                patientName: `${patient.firstName} ${patient.lastName}`,
+                patientName,
                 startTime: shift.startTime,
                 endTime: shift.endTime,
                 branchName: shift.branch.name,
@@ -87,23 +87,17 @@ let ShiftsController = class ShiftsController {
             },
             userId: req.user.id,
             companyId: req.user.companyId,
-        });
+        }).catch(() => { });
         if (patient.email) {
-            try {
-                await this.emailService.sendAppointmentNotification(patient.email, `${patient.firstName} ${patient.lastName}`, shift.startTime, shift.endTime, shift.type, shift.branch.name, hospitalName);
-            }
-            catch {
-            }
+            this.emailService.sendAppointmentNotification(patient.email, patientName, shift.startTime, shift.endTime, shift.type, shift.branch.name, hospitalName).catch(() => { });
         }
-        try {
-            const admins = await this.prisma.user.findMany({
-                where: { companyId: req.user.companyId, role: 'SUPER_ADMIN' },
-                select: { email: true, name: true },
-            });
-            const patientName = `${patient.firstName} ${patient.lastName}`;
+        this.prisma.user.findMany({
+            where: { companyId: req.user.companyId, role: 'SUPER_ADMIN' },
+            select: { email: true, name: true },
+        }).then((admins) => {
             const startFormatted = shift.startTime.toLocaleString('en-US', { timeZone: 'America/Phoenix' });
             for (const admin of admins) {
-                await this.emailService.sendMail({
+                this.emailService.sendMail({
                     to: admin.email,
                     subject: `New Appointment Created – ${patientName}`,
                     html: `
@@ -120,11 +114,9 @@ let ShiftsController = class ShiftsController {
             </table>
             <p style="color:#888;font-size:12px;">This is an automated notification from your clinic dashboard.</p>
           `,
-                });
+                }).catch(() => { });
             }
-        }
-        catch {
-        }
+        }).catch(() => { });
         return shift;
     }
 };
@@ -142,6 +134,7 @@ exports.ShiftsController = ShiftsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        audit_service_1.AuditService, typeof (_a = typeof email_service_1.EmailService !== "undefined" && email_service_1.EmailService) === "function" ? _a : Object])
+        audit_service_1.AuditService,
+        email_service_1.EmailService])
 ], ShiftsController);
 //# sourceMappingURL=shifts.controller.js.map

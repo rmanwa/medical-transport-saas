@@ -83,13 +83,16 @@ export class ShiftsController {
       include: { branch: true },
     });
 
-    // ── Audit log ──
-    await this.auditService.log({
+    // ── Fire-and-forget: audit log + emails (don't block the response) ──
+    const patientName = `${patient.firstName} ${patient.lastName}`;
+
+    // Audit log
+    this.auditService.log({
       action: 'APPOINTMENT_CREATED',
       entityId: shift.id,
       entityType: 'Shift',
       details: {
-        patientName: `${patient.firstName} ${patient.lastName}`,
+        patientName,
         startTime: shift.startTime,
         endTime: shift.endTime,
         branchName: shift.branch.name,
@@ -98,37 +101,29 @@ export class ShiftsController {
       },
       userId: req.user.id,
       companyId: req.user.companyId,
-    });
+    }).catch(() => {});
 
-    // ── Email notification to patient ──
+    // Email to patient
     if (patient.email) {
-      try {
-        await this.emailService.sendAppointmentNotification(
-          patient.email,
-          `${patient.firstName} ${patient.lastName}`,
-          shift.startTime,
-          shift.endTime,
-          shift.type,
-          shift.branch.name,
-          hospitalName,
-        );
-      } catch {
-        // Don't fail the request if email send fails
-      }
+      this.emailService.sendAppointmentNotification(
+        patient.email,
+        patientName,
+        shift.startTime,
+        shift.endTime,
+        shift.type,
+        shift.branch.name,
+        hospitalName,
+      ).catch(() => {});
     }
 
-    // ── Email notification to manager (SUPER_ADMIN) ──
-    try {
-      const admins = await this.prisma.user.findMany({
-        where: { companyId: req.user.companyId, role: 'SUPER_ADMIN' },
-        select: { email: true, name: true },
-      });
-
-      const patientName = `${patient.firstName} ${patient.lastName}`;
+    // Email to manager(s)
+    this.prisma.user.findMany({
+      where: { companyId: req.user.companyId, role: 'SUPER_ADMIN' },
+      select: { email: true, name: true },
+    }).then((admins) => {
       const startFormatted = shift.startTime.toLocaleString('en-US', { timeZone: 'America/Phoenix' });
-
       for (const admin of admins) {
-        await this.emailService.sendMail({
+        this.emailService.sendMail({
           to: admin.email,
           subject: `New Appointment Created – ${patientName}`,
           html: `
@@ -145,11 +140,9 @@ export class ShiftsController {
             </table>
             <p style="color:#888;font-size:12px;">This is an automated notification from your clinic dashboard.</p>
           `,
-        });
+        }).catch(() => {});
       }
-    } catch {
-      // Don't fail the request if admin email fails
-    }
+    }).catch(() => {});
 
     return shift;
   }

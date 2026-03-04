@@ -19,20 +19,20 @@ export declare class ShiftsController {
     constructor(prisma: PrismaService, auditService: AuditService, emailService: EmailService);
     createShift(branchId: string, body: CreateShiftBody, req: RequestWithUser): Promise<{
         branch: {
-            name: string;
             id: string;
+            name: string;
             address: string;
             companyId: string;
         };
     } & {
-        priority: import("@prisma/client").$Enums.Priority;
-        branchId: string;
         id: string;
         startTime: Date;
         endTime: Date;
         notes: string | null;
         type: import("@prisma/client").$Enums.MeetingType;
+        priority: import("@prisma/client").$Enums.Priority;
         patientId: string;
+        branchId: string;
         hospitalId: string | null;
     }>;
 }

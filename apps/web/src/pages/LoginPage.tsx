@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { login, setToken } from '../api';
+import { login, verify2FA, forgotPassword, resetPassword, setToken } from '../api';
+import type { Login2FAResponse } from '../api';
 import { Card, CardHeader, CardBody } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -23,36 +24,146 @@ const LockIcon = () => (
   </svg>
 );
 
+const ShieldIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+);
+
+const BackIcon = () => (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+);
+
+type View = 'login' | '2fa' | 'forgot' | 'reset';
+
 export function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
   const { showToast } = useToast();
-  const [email, setEmail] = useState('manager@acmemedtransport.com');
-  const [password, setPassword] = useState('Password123!');
+  const [view, setView] = useState<View>('login');
   const [loading, setLoading] = useState(false);
 
-  async function submit(e: React.FormEvent) {
+  // Login state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // 2FA state
+  const [tempToken, setTempToken] = useState('');
+  const [twoFACode, setTwoFACode] = useState('');
+
+  // Forgot/Reset password state
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // ─── Login submit ──────────────────────────────────────────────────────
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    
-    if (!email.trim()) {
-      showToast('Email is required', 'error');
-      return;
-    }
-    
-    if (!password) {
-      showToast('Password is required', 'error');
-      return;
-    }
+    if (!email.trim()) { showToast('Email is required', 'error'); return; }
+    if (!password) { showToast('Password is required', 'error'); return; }
 
     setLoading(true);
     try {
       const res = await login(email, password);
-      setToken(res.accessToken);
-      showToast('Login successful!', 'success');
-      onLoggedIn();
+
+      if ('requires2FA' in res && res.requires2FA) {
+        // 2FA is required — show code input
+        setTempToken((res as Login2FAResponse).tempToken);
+        setView('2fa');
+        showToast('Enter your 2FA code from your authenticator app', 'success');
+      } else if ('accessToken' in res) {
+        // No 2FA — login directly
+        setToken(res.accessToken);
+        showToast('Login successful!', 'success');
+        onLoggedIn();
+      }
     } catch (e: any) {
       showToast(e?.message ?? 'Login failed. Please check your credentials.', 'error');
     } finally {
       setLoading(false);
     }
+  }
+
+  // ─── 2FA verify submit ────────────────────────────────────────────────
+  async function handle2FAVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (!twoFACode || !/^\d{6}$/.test(twoFACode)) {
+      showToast('Enter a valid 6-digit code', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await verify2FA(tempToken, twoFACode);
+      setToken(res.accessToken);
+      showToast('Login successful!', 'success');
+      onLoggedIn();
+    } catch (e: any) {
+      showToast('Invalid or expired code. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ─── Forgot password submit ───────────────────────────────────────────
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resetEmail.trim() || !resetEmail.includes('@')) {
+      showToast('Enter a valid email address', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await forgotPassword(resetEmail);
+      setView('reset');
+      showToast('If an account exists, a reset code has been sent to your email.', 'success');
+    } catch (e: any) {
+      showToast(e?.message ?? 'Failed to send reset code', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ─── Reset password submit ────────────────────────────────────────────
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resetCode || !/^\d{6}$/.test(resetCode)) {
+      showToast('Enter the 6-digit code from your email', 'error');
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      showToast('Password must be at least 6 characters', 'error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await resetPassword(resetEmail, resetCode, newPassword);
+      showToast('Password reset successful! You can now sign in.', 'success');
+      setView('login');
+      setPassword('');
+      setResetCode('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (e: any) {
+      showToast('Invalid or expired reset code. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function goBackToLogin() {
+    setView('login');
+    setTwoFACode('');
+    setResetCode('');
+    setNewPassword('');
+    setConfirmPassword('');
   }
 
   return (
@@ -74,79 +185,192 @@ export function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
           </div>
         </Card>
 
-        {/* Login Form Card */}
-        <Card variant="elevated">
-          <CardHeader 
-            title="Welcome Back" 
-            subtitle="Sign in to manage your operations"
-          />
-          <CardBody>
-            <form onSubmit={submit} className="space-y-4">
-              <Input
-                type="email"
-                label="Email Address"
-                placeholder="your.email@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                leftIcon={<EmailIcon />}
-                disabled={loading}
-                required
-                autoComplete="email"
-              />
+        {/* ─── Login Form ─────────────────────────────────────────────── */}
+        {view === 'login' && (
+          <Card variant="elevated">
+            <CardHeader title="Welcome Back" subtitle="Sign in to manage your operations" />
+            <CardBody>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <Input
+                  type="email"
+                  label="Email Address"
+                  placeholder="your.email@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  leftIcon={<EmailIcon />}
+                  disabled={loading}
+                  required
+                  autoComplete="email"
+                />
+                <Input
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  leftIcon={<LockIcon />}
+                  disabled={loading}
+                  required
+                  autoComplete="current-password"
+                />
 
-              <Input
-                type="password"
-                label="Password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                leftIcon={<LockIcon />}
-                disabled={loading}
-                required
-                autoComplete="current-password"
-              />
-
-              <Button
-                type="submit"
-                variant="primary"
-                fullWidth
-                loading={loading}
-                icon={<LoginIcon />}
-                size="lg"
-              >
-                Sign In
-              </Button>
-            </form>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4">
-              <div className="flex items-start gap-3">
-                <svg className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-blue-900 dark:text-blue-200">Demo Credentials</h4>
-                  <div className="mt-2 space-y-1 text-xs text-blue-800">
-                    <div className="font-mono">
-                      <strong>Manager:</strong> manager@acmemedtransport.com
-                    </div>
-                    <div className="font-mono">
-                      <strong>Staff:</strong> staff@acmemedtransport.com
-                    </div>
-                    <div className="font-mono">
-                      <strong>Password:</strong> Password123!
-                    </div>
-                  </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { setResetEmail(email); setView('forgot'); }}
+                    className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition"
+                  >
+                    Forgot Password?
+                  </button>
                 </div>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+
+                <Button type="submit" variant="primary" fullWidth loading={loading} icon={<LoginIcon />} size="lg">
+                  Sign In
+                </Button>
+              </form>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* ─── 2FA Verification ───────────────────────────────────────── */}
+        {view === '2fa' && (
+          <Card variant="elevated">
+            <CardHeader title="Two-Factor Authentication" subtitle="Enter the 6-digit code from your authenticator app" />
+            <CardBody>
+              <form onSubmit={handle2FAVerify} className="space-y-4">
+                <Input
+                  type="text"
+                  label="Verification Code"
+                  placeholder="000000"
+                  value={twoFACode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setTwoFACode(val);
+                  }}
+                  leftIcon={<ShieldIcon />}
+                  disabled={loading}
+                  required
+                  autoComplete="one-time-code"
+                  autoFocus
+                />
+
+                <Button type="submit" variant="primary" fullWidth loading={loading} icon={<ShieldIcon />} size="lg">
+                  Verify Code
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={goBackToLogin}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition pt-2"
+                >
+                  <BackIcon /> Back to login
+                </button>
+              </form>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* ─── Forgot Password (enter email) ─────────────────────────── */}
+        {view === 'forgot' && (
+          <Card variant="elevated">
+            <CardHeader title="Reset Password" subtitle="Enter your email to receive a reset code" />
+            <CardBody>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <Input
+                  type="email"
+                  label="Email Address"
+                  placeholder="your.email@company.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  leftIcon={<EmailIcon />}
+                  disabled={loading}
+                  required
+                  autoComplete="email"
+                  autoFocus
+                />
+
+                <Button type="submit" variant="primary" fullWidth loading={loading} size="lg">
+                  Send Reset Code
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={goBackToLogin}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition pt-2"
+                >
+                  <BackIcon /> Back to login
+                </button>
+              </form>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* ─── Reset Password (enter code + new password) ────────────── */}
+        {view === 'reset' && (
+          <Card variant="elevated">
+            <CardHeader title="Enter Reset Code" subtitle={`We sent a 6-digit code to ${resetEmail}`} />
+            <CardBody>
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <Input
+                  type="text"
+                  label="Reset Code"
+                  placeholder="000000"
+                  value={resetCode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setResetCode(val);
+                  }}
+                  leftIcon={<ShieldIcon />}
+                  disabled={loading}
+                  required
+                  autoComplete="one-time-code"
+                  autoFocus
+                />
+
+                <Input
+                  type="password"
+                  label="New Password"
+                  placeholder="At least 6 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  leftIcon={<LockIcon />}
+                  disabled={loading}
+                  required
+                  autoComplete="new-password"
+                />
+
+                <Input
+                  type="password"
+                  label="Confirm Password"
+                  placeholder="Re-enter new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  leftIcon={<LockIcon />}
+                  disabled={loading}
+                  required
+                  autoComplete="new-password"
+                />
+
+                <Button type="submit" variant="primary" fullWidth loading={loading} size="lg">
+                  Reset Password
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={goBackToLogin}
+                  className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition pt-2"
+                >
+                  <BackIcon /> Back to login
+                </button>
+              </form>
+            </CardBody>
+          </Card>
+        )}
 
         {/* Footer */}
         <div className="text-center text-xs text-slate-500 dark:text-slate-400">
           <p>Secure appointment scheduling and management</p>
-          <p className="mt-1">© 2026 Appointment Schedule. All rights reserved.</p>
+          <p className="mt-1">&copy; 2026 Appointment Schedule. All rights reserved.</p>
         </div>
       </div>
     </div>

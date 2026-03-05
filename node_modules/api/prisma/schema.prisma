@@ -58,17 +58,32 @@ model Branch {
 }
 
 model User {
-  id                   String       @id @default(uuid())
-  email                String       @unique
+  id                   String           @id @default(uuid())
+  email                String           @unique
   passwordHash         String
   name                 String
-  role                 Role         @default(STAFF)
+  role                 Role             @default(STAFF)
   companyId            String
-  company              Company      @relation(fields: [companyId], references: [id])
+  company              Company          @relation(fields: [companyId], references: [id])
   branches             UserBranch[]
-  canAccessAllBranches Boolean      @default(false)
-  mustChangePassword   Boolean      @default(false)
+  canAccessAllBranches Boolean          @default(false)
+  mustChangePassword   Boolean          @default(false)
+  twoFactorSecret      String?
+  twoFactorEnabled     Boolean          @default(false)
   auditLogs            AuditLog[]
+  passwordResets       PasswordReset[]
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  codeHash  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model UserBranch {

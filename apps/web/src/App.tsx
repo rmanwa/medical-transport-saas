@@ -11,8 +11,9 @@ import { BranchesPage } from './pages/BranchesPage';
 import { ExportPage } from './pages/ExportPage';
 import { SetupWizardPage } from './pages/SetupWizardPage';
 import { StaffPage } from './pages/StaffPage';
-import { AuditLogPage } from './pages/AuditLogPage';  // ← NEW
-type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals' | 'branches' | 'export'| 'staff' | 'audit';  // ← audit added
+import { AuditLogPage } from './pages/AuditLogPage';
+import { SecurityPage } from './pages/SecurityPage';
+type Route = 'dashboard' | 'clients' | 'scheduler' | 'hospitals' | 'branches' | 'export'| 'staff' | 'audit'| 'security'; 
 
 function cx(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -90,12 +91,17 @@ const Icons = {
       <path strokeLinecap="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
     </svg>
   ),
-  // ← NEW: Audit icon
+  
   Audit: (props: { className?: string }) => (
     <svg viewBox="0 0 24 24" className={props.className} fill="none" stroke="currentColor" strokeWidth="2">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
     </svg>
   ),
+  Security: (props: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={props.className} fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+),
 };
 
 // SUPER_ADMIN: Dashboard, Clients, Scheduler, Branches, Clinics, Export, Staff, Audit Log
@@ -108,7 +114,8 @@ const ALL_NAV = [
   { key: 'hospitals' as const, label: 'Clinics',   icon: Icons.Clinic,   adminOnly: false },
   { key: 'export'    as const, label: 'Export',    icon: Icons.Export,   adminOnly: true  },
   { key: 'staff'     as const, label: 'Staff',     icon: Icons.Staff,    adminOnly: true  },
-  { key: 'audit'     as const, label: 'Audit Log', icon: Icons.Audit,    adminOnly: true  },  // ← NEW
+  { key: 'audit'     as const, label: 'Audit Log', icon: Icons.Audit,    adminOnly: true  },
+  { key: 'security' as const, label: 'Security', icon: Icons.Security, adminOnly: false },
 ];
 
 function getNavForUser(user: AuthUser) {
@@ -301,7 +308,9 @@ export default function App() {
     const titles: Record<Route, string> = {
       dashboard: 'Dashboard', clients: 'Clients', scheduler: 'Appointment Scheduler',
       branches: 'Branches', hospitals: 'Clinics', export: 'Export Reports', staff: 'Staff Management',
-      audit: 'Audit Log',  // ← NEW
+      audit: 'Audit Log',
+      security: 'Security',
+      security: 'Manage two-factor authentication for your account.',
     };
     return titles[route] ?? 'Dashboard';
   }, [route]);
@@ -545,6 +554,7 @@ if (me?.mustChangePassword) {
               {route === 'export'     && me.role === 'SUPER_ADMIN' && <ExportPage user={me} />}
               {route === 'staff'      && me.role === 'SUPER_ADMIN' && <StaffPage />}
               {route === 'audit'      && me.role === 'SUPER_ADMIN' && <AuditLogPage />}  {/* ← NEW */}
+              {route === 'security' && <SecurityPage/>}
             </div>
           </main>
         </div>

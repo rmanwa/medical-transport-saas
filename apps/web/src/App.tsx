@@ -309,7 +309,6 @@ export default function App() {
       dashboard: 'Dashboard', clients: 'Clients', scheduler: 'Appointment Scheduler',
       branches: 'Branches', hospitals: 'Clinics', export: 'Export Reports', staff: 'Staff Management',
       audit: 'Audit Log',
-      security: 'Security',
       security: 'Manage two-factor authentication for your account.',
     };
     return titles[route] ?? 'Dashboard';
@@ -324,7 +323,8 @@ export default function App() {
       hospitals: 'Manage clinic destinations for appointments.',
       export: 'Download appointment and client data as CSV files.',
       staff: 'Invite team members and manage branch access.',
-      audit: 'Track all actions — who did what and when.',  // ← NEW
+      audit: 'Track all actions — who did what and when.',
+      security: 'Manage two-factor authentication for your account.'
     };
     return subs[route] ?? '';
   }, [route]);

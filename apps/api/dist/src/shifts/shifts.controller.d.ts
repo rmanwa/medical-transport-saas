@@ -21,19 +21,19 @@ export declare class ShiftsController {
         branch: {
             id: string;
             name: string;
-            address: string;
             companyId: string;
+            address: string;
         };
     } & {
         id: string;
+        branchId: string;
+        hospitalId: string | null;
+        patientId: string;
+        priority: import("@prisma/client").$Enums.Priority;
         startTime: Date;
         endTime: Date;
         notes: string | null;
         type: import("@prisma/client").$Enums.MeetingType;
-        priority: import("@prisma/client").$Enums.Priority;
-        patientId: string;
-        branchId: string;
-        hospitalId: string | null;
     }>;
 }
 export {};
